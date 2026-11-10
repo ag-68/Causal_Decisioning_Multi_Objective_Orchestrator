@@ -2,6 +2,5 @@ __pycache__/
 .pytest_cache/
 .venv/
 *.pyc
-data/*.csv
 data/*.csv.tmp
 data/*.gz
