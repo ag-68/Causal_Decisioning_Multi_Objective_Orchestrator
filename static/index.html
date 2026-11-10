@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Closed-loop message orchestrator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { background: #10140f; color: #f6eef4; }
+    .card { background: #1a2118; border: 1px solid #2c3826; }
+    input[type="range"] { accent-color: #e7a8cc; }
+    .badge { border: 1px solid transparent; }
+    .formulation-copy p { margin: 0.8rem 0; }
+    .formulation-copy h3 { margin: 1.25rem 0 0.4rem; font-weight: 600; }
+    .formulation-copy h3:first-child { margin-top: 0; }
+    .formulation-copy ul, .formulation-copy ol { margin: 0.6rem 0 0.6rem 1.25rem; }
+    .formulation-copy li { margin: 0.35rem 0; }
+    .formulation-copy code { font-family: ui-monospace, monospace; font-size: 0.85em; }
+    .formulation-copy table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+    .formulation-copy th, .formulation-copy td { border-bottom: 1px solid #2c3826; padding: 0.45rem 0.6rem; vertical-align: top; text-align: left; }
+    .formulation-copy th { color: #c4b0cc; font-weight: 600; }
+    .formulation-copy .katex { color: #ffffff; }
+    #formulation-body,
+    #module-body,
+    #overview-intro { font-size: 1rem; line-height: 1.7; color: #ffffff; }
+    #formulation-body h3,
+    #module-body h3,
+    #overview-intro h3 { font-size: 1.2rem; color: #b388ff; }
+    #formulation-body strong,
+    #module-body strong,
+    #overview-intro strong,
+    #formulation-body th,
+    #module-body th { color: #b388ff; }
+    .sample-legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; margin: 0.2rem 0 0.55rem; }
+    .sample-legend span { font-weight: 600; }
+    .sample-scroll { overflow-x: auto; margin-bottom: 0.4rem; }
+    #overview-intro table.sample-row,
+    #formulation-body table.sample-row { width: max-content; min-width: 100%; font-size: 0.95rem; margin: 0; }
+    #overview-intro table.sample-row th,
+    #overview-intro table.sample-row td,
+    #formulation-body table.sample-row th,
+    #formulation-body table.sample-row td { padding: 0.4rem 0.55rem; white-space: nowrap; font-weight: 600; }
+    #overview-intro .src-file,
+    #formulation-body .src-file { color: #ffffff; }
+    #overview-intro .src-add,
+    #formulation-body .src-add { color: #ff9f1c; }
+    #overview-intro .src-draw,
+    #formulation-body .src-draw { color: #ff5d73; }
+    #panel-benchmarks .formulation-copy { font-size: 1rem; line-height: 1.7; color: #ffffff; }
+    #panel-benchmarks h3 { font-size: 1.2rem; color: #b388ff; }
+    #panel-benchmarks strong { color: #b388ff; }
+    #formulation-body table,
+    #module-body table { font-size: 1rem; }
+    #formulation-body .flow-sheet { font-size: 1rem; line-height: 1.7; }
+    #formulation-body .flow-note,
+    #formulation-body .flow-node span { color: #ffffff; font-size: 1rem; line-height: 1.7; }
+    #formulation-body .flow-kicker,
+    #formulation-body .flow-node strong { color: #b388ff; }
+    .formulation-copy .katex-display { margin: 0.9rem 0; overflow-x: auto; overflow-y: hidden; }
+    .page-bar {
+      display: flex;
+      background: #1a2118;
+      border: 1px solid #2c3826;
+      border-radius: 0.85rem;
+      overflow: hidden;
+    }
+    .page-bar button, #formulation-tabs button {
+      color: #fff;
+      background: transparent;
+      border: 0;
+      border-right: 1px solid #2c3826;
+      padding: 0.72rem 0.9rem;
+      font-size: 0.92rem;
+    }
+    .page-bar button { flex: 1; }
+    .page-bar button:last-child, #formulation-tabs button:last-child { border-right: 0; }
+    .page-bar button:hover, #formulation-tabs button:hover { background: #243028; }
+    .tab-on { background: #314033; color: #fff; box-shadow: inset 0 -3px 0 #ffffff; }
+    .page-bar button.tab-on:hover, #formulation-tabs button.tab-on:hover { background: #3c4d3e; }
+    #formulation-tabs { display: flex; flex-direction: column; width: 11.5rem; flex: 0 0 11.5rem; align-self: flex-start; overflow: hidden; background: #1a2118; border: 1px solid #2c3826; border-radius: 0.85rem; }
+    #formulation-tabs button { flex: 0 0 auto; text-align: left; border-right: 0; border-bottom: 1px solid #2c3826; white-space: normal; }
+    #formulation-tabs button:last-child { border-bottom: 0; }
+    #formulation-tabs button.tab-on { box-shadow: inset 3px 0 0 #ffffff; }
+    .flow-sheet { font-size: 1.0625rem; line-height: 1.65; }
+    .flow-sheet h3 { font-size: 1.45rem; margin-bottom: 0.35rem; }
+    .flow-note { margin: 0.4rem 0 1rem; color: #f6eef4; font-size: 1.02rem; line-height: 1.6; }
+    .flow-kicker { display: block; margin-bottom: 0.2rem; color: #e7a8cc; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .flow-node { width: 100%; border-radius: 1rem; border: 1px solid #3d5234; background: #10140f; padding: 0.95rem 1.05rem; text-align: left; }
+    .flow-node:hover { border-color: #e7a8cc; }
+    .flow-node strong { display: block; font-size: 1.08rem; font-weight: 600; }
+    .flow-node span { display: block; margin-top: 0.28rem; color: #f0e4f2; font-size: 0.98rem; line-height: 1.5; }
+    .flow-arrow { display: flex; justify-content: center; padding: 0.375rem 0; }
+    .flow-arrow svg { display: block; }
+    #legend-pop { max-width: 22rem; }
+    #module-title { font-size: 1.4rem; }
+    #module-body { font-size: 1.05rem; line-height: 1.7; }
+    .motive { font-size: 1rem; line-height: 1.7; color: #ffffff; }
+    .motive h2 { font-size: 1.2rem; font-weight: 600; color: #b388ff; }
+    .motive p,
+    .motive .text-sm { font-size: 1rem; line-height: 1.7; color: #ffffff; }
+    .scene { background: #10140f; border: 1px solid #2c3826; border-radius: 1rem; padding: 1rem 1.05rem; }
+    .phone { display: flex; align-items: center; gap: 0.7rem; border-radius: 0.8rem; background: #1a2118; padding: 0.55rem 0.7rem; }
+    .dot { width: 0.7rem; height: 0.7rem; border-radius: 999px; flex: none; }
+    .meter { height: 0.55rem; border-radius: 999px; background: #2c3826; overflow: hidden; }
+    .meter > div { height: 100%; border-radius: 999px; }
+    .loop-step { border-radius: 0.8rem; background: #1a2118; padding: 0.55rem 0.7rem; text-align: center; font-size: 0.92rem; }
+    #result-tabs.page-bar { flex-direction: column; width: 11.5rem; flex: 0 0 11.5rem; align-self: flex-start; }
+    #result-tabs.page-bar button { flex: 0 0 auto; text-align: left; border-right: 0; border-bottom: 1px solid #2c3826; white-space: normal; }
+    #result-tabs.page-bar button:last-child { border-bottom: 0; }
+    #result-tabs.page-bar button.tab-on { box-shadow: inset 3px 0 0 #ffffff; }
+    #page-tabs.page-bar,
+    #page-tabs.page-bar button.tab-on { background: #10140f; }
+    #panel-overview.card,
+    #panel-formulation.card,
+    #panel-benchmarks.card,
+    #panel-results .card { background: #10140f; }
+    #panel-results .text-sm { font-size: 1rem; line-height: 1.7; color: #ffffff; }
+    #panel-results #segment-takeaways { background-color: #8bd450; color: #000000; border-color: #8bd450; }
+    #panel-results h2 { font-size: 1.2rem; }
+    #panel-results h3 { font-size: 1.08rem; }
+    #panel-results .mix-table { font-size: 0.875rem; }
+    #panel-results .text-sm > span.font-semibold:first-child:not([class*="8bd450"]) { color: #b388ff; }
+    .legend-key {
+      color: #f6eef4;
+      background: #10140f;
+      cursor: pointer;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+    .legend-key:hover,
+    .legend-key:focus-visible {
+      background: #314033;
+      border-color: #e7a8cc;
+      color: #ffffff;
+    }
+    .js-plotly-plot .legend .traces,
+    .js-plotly-plot .legend .legendtoggle { cursor: pointer; }
+    .js-plotly-plot .legend .traces:hover .legendtext { fill: #e7a8cc !important; }
+    .mix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    .predictor-table { font-size: 0.95rem; }
+    .predictor-table th, .predictor-table td { padding: 0.55rem 0.65rem; }
+    .mix-table th, .mix-table td { border-bottom: 1px solid #2c3826; padding: 0.4rem 0.45rem; vertical-align: top; text-align: left; }
+    .mix-table th { color: #c4b0cc; font-weight: 600; }
+    .mix-table th .match-line { white-space: nowrap; }
+    .mix-table tr.band-gap td { border-bottom: 0; padding: 0.5rem 0; }
+    .mix-table tr.segment-gap td { border-bottom: 0; padding: 0.95rem 0; }
+    .mix-table td.segment-cell { vertical-align: top; }
+    .mix-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin-top: 0.75rem; }
+    .mix-menu { display: inline-flex; align-items: center; gap: 0.45rem; color: #c4b0cc; font-size: 0.75rem; }
+    .segment-pick, .cap-pick, .predictor-pick, .weekly-pick { width: auto; min-width: 8.5rem; border-radius: 0.5rem; border: 1px solid #3d5234; background: #10140f; color: #f6eef4; padding: 0.35rem 0.4rem; font-size: 0.8125rem; }
+    .cap-pick, .weekly-pick { min-width: 6.5rem; }
+    .tired-share { display: block; margin-top: 0.25rem; color: #c4b0cc; font-size: 0.75rem; line-height: 1.35; }
+    .mix-note { display: inline-block; line-height: 1.35; }
+    .mix-top { background: #314033; border-radius: 0.2rem; padding: 0 0.28rem; }
+  </style>
+</head>
+<body class="min-h-screen font-sans">
+  <main class="mx-auto max-w-6xl px-4 py-8">
+    <header class="mb-8">
+      <div class="flex items-start justify-between gap-6">
+        <div>
+          <p class="text-xs uppercase tracking-[0.22em] text-[#e7a8cc]">Causal decisioning</p>
+          <h1 class="mt-2 text-3xl font-semibold tracking-tight">Closed-loop message orchestrator</h1>
+        </div>
+      </div>
+
+      <section class="motive mt-6" aria-label="Why this project">
+        <p class="max-w-4xl text-[#f6eef4]">A shop, a music app, or a delivery app can send a note: a buzz on the phone, an email waiting in the inbox, or a short clip inside the app. The note can bring a sale or a visit. The same note can make a person say “stop writing to me.”</p>
+        <p class="mt-3 max-w-4xl text-[#f6eef4]"><span class="text-[#ff5d73]">Message Orchestration</span> is about the decision each morning: who should hear something, and who should be left alone. <span class="text-[#ff5d73]">Content decisioning</span> is the same choice for a song or a post: once some other model has scored it, decide whether to distribute it, show it less, hold it for review, or leave it alone.</p>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-3">
+          <article class="scene">
+            <h2>A welcome note, or too many notes</h2>
+            <div class="mt-3 space-y-2 text-sm">
+              <div class="phone"><span class="dot" style="background:#ffb020"></span><span>One buzz: “your order is ready.” Often welcome.</span></div>
+              <div class="phone"><span class="dot" style="background:#e7a8cc"></span><span>A second and a third the same week. Now it feels like nagging.</span></div>
+              <div class="phone"><span class="dot" style="background:#d0d5dd"></span><span>After enough of them, the person blocks the number.</span></div>
+            </div>
+            <p class="mt-3 text-sm text-[#c4b0cc]">If we only chase today’s sales, we buzz almost everyone. People who would have come back anyway get a note they did not need. People who hate being interrupted leave for good, and next week the notes stop working.</p>
+          </article>
+
+          <article class="scene">
+            <h2>Two house rules for the whole morning</h2>
+            <p class="mt-3 text-sm">Out of 1,000 people, the shop allows about 15 to say “stop.”</p>
+            <div class="meter mt-2" aria-hidden="true"><div style="width:1.5%;min-width:6px;background:#ff5d73"></div></div>
+            <p class="mt-3 text-sm">And at most about 300 phones may buzz. The rest get a quieter note, or nothing.</p>
+            <div class="meter mt-2" aria-hidden="true"><div style="width:30%;background:#ffb020"></div></div>
+            <p class="mt-3 text-sm text-[#c4b0cc]">Each person still gets their own decision. Ann may get the buzz because, for her, it is likely to cause a visit. Ben is left alone because he would have bought anyway. The rules only limit the day’s totals, the way a café will not seat 300 people when it has 80 chairs.</p>
+          </article>
+
+          <article class="scene">
+            <h2>Today’s note changes tomorrow</h2>
+            <div class="mt-3 grid grid-cols-3 gap-2">
+              <div class="loop-step">This morning<br>pick a note</div>
+              <div class="loop-step">The note<br>adds tiredness</div>
+              <div class="loop-step">Tomorrow<br>we look again</div>
+            </div>
+            <p class="mt-3 text-sm text-[#c4b0cc]">A buzz leaves the person more tired. A quiet day lets that tiredness fade. Tomorrow we choose again, looking at the new tiredness. We do not pretend every morning is the first morning.</p>
+          </article>
+        </div>
+
+        <div class="mt-5 grid gap-4 lg:grid-cols-2">
+          <article class="scene">
+            <h2>What “causal” means here</h2>
+            <p class="mt-2 text-sm">We count only the extra sale caused by the note, compared with sending nothing to the same person. Someone who would have bought anyway is not a win for the note. Someone who is pushed into saying “stop” is a loss caused by the note. The decision uses those extras, not the raw chance that a purchase happens.</p>
+          </article>
+          <article class="scene">
+            <h2>What “closed loop” means here</h2>
+            <p class="mt-2 text-sm">The two house rules stay the same every day: about 1.5% extra “stop,” and about 30% of people on one channel. The charges used to meet those rules do not stay the same. Each morning the opt-out charge and the channel charges are moved until the chosen notes sit on the rules, and the next morning starts from those new charges. That is the closed loop. Fatigue moves as well: yesterday’s note leaves the person more tired, and tomorrow’s score is computed at that new tiredness.</p>
+          </article>
+        </div>
+      </section>
+    </header>
+
+    <nav id="page-tabs" class="page-bar mb-4" role="tablist" aria-label="Page sections">
+      <button id="page-tab-overview" type="button" class="tab-on" role="tab" aria-selected="true">Overview</button>
+      <button id="page-tab-formulation" type="button" role="tab" aria-selected="false">Problem Formulation</button>
+      <button id="page-tab-benchmarks" type="button" role="tab" aria-selected="false">Benchmarks &amp; Tests</button>
+      <button id="page-tab-results" type="button" role="tab" aria-selected="false">Results</button>
+    </nav>
+
+    <section id="panel-overview" class="card rounded-2xl p-5">
+      <div id="overview-intro" class="formulation-copy text-sm leading-6 text-[#f6eef4]">Loading the note…</div>
+    </section>
+
+    <section id="panel-formulation" class="card hidden rounded-2xl p-5">
+      <div class="flex items-start gap-4">
+        <div id="formulation-tabs" role="tablist" aria-label="Problem formulation"></div>
+        <div id="formulation-body" class="formulation-copy min-w-0 flex-1 text-sm leading-6 text-[#f6eef4]"></div>
+      </div>
+    </section>
+
+    <section id="panel-benchmarks" class="card hidden rounded-2xl p-5">
+      <div class="formulation-copy text-sm leading-6 text-[#f6eef4]">
+        <h3>Tests and the rules they compare</h3>
+        <p>Each test asks one question. The setup says who is scored, and over how many mornings. The benchmarks are the other rules on that same setup. The measured numbers are under Results.</p>
+
+        <h3>Methods</h3>
+        <p>The charts use scikit-learn for the predictors and NumPy for the charge search. The charge search is a loop in this project. It does not call an outside solver.</p>
+        <p><strong>Trees, on the prepared charts.</strong> The buy chance and the stop chance are histogram gradient-boosted trees, <code>HistGradientBoostingRegressor</code>. There is one group for each message and each answer: silence, email, push, and audio, once for a buy and once for a stop. A group has 40 trees, at most 3 questions deep, with at least 50 people in a leaf. The loss is squared error. Greedy predictive is one more of these trees, trained on the raw buy chance.</p>
+        <p><strong>Other predictors.</strong> The same rows were also fit with a linear support-vector machine (<code>LinearSVR</code>), a kernel map (<code>Nystroem</code>) in front of that machine, and a small neural net (<code>MLPRegressor</code>). A second run used log loss: logistic regression, boosted-tree classifiers, and <code>MLPClassifier</code>. Those log-loss fits stay recorded experiments. Simulate custom can switch the live scores to the support-vector machine, the neural net, or the small copy. The prepared charts stay with the boosted trees. The small copy names the tree's message at the caps on the sliders and does not tune a charge. Its Qini curve stays on the trees.</p>
+        <p><strong>Charge search.</strong> Each pass gives every person the message with the best score. The opt-out charge then moves by 2 times the gap between predicted extra stops and the cap. Each channel charge moves by 0.12 times the gap between that channel's share and its cap. A charge stays at or above 0. A morning takes 80 passes. Each morning of the 21-day run starts from yesterday's charges. Two sorts then move whole people back inside the caps.</p>
+        <p><strong>The small copy.</strong> Distillation trains a boosted-tree classifier, <code>HistGradientBoostingClassifier</code>, depth 6, to name the message the full rule assigned. That rule is the trees' extra buy and extra stop, then the message chosen at a 1.5% opt-out cap and a 30% channel cap. The 21-day comparison is under Results, on Distillation.</p>
+
+        <h3>21-day tally</h3>
+        <p>The numbers for this test are under Results, on Shadow price.</p>
+        <p><strong>Setup.</strong> The held-out people. Tiredness starts at 0. Each morning a rule picks one message. One draw between 0 and 1 is compared with the chance under the chosen message and with the chance under silence, so one person contributes +1, 0, or −1. Extra buy is the average of the buy gaps. Extra stops are the average of the stop gaps. The number for the run is the average of those daily gaps. The prepared cases use opt-out caps of 1.5% and 5%, and channel caps of 15% and 30%. Weekend shift is 1.8 and the horizon is 21 days. Tiredness carries into the next morning. Simulate custom is where those knobs can move.</p>
+        <p><strong>Benchmarks.</strong> Two rules. On Monday they send the same messages.</p>
+        <ol>
+          <li><strong>Closed-loop uplift.</strong> The score from the policy section. Each morning starts from yesterday's opt-out charge and channel charges, then moves them for today's tiredness. On a weekend, predicted extra stops are multiplied by the traffic shift before the charge moves.</li>
+          <li><strong>Frozen charge.</strong> Monday's opt-out charge is kept for every later morning. After Monday the score is extra buy minus that frozen charge times extra stops, and the channel cap is applied. The weekend multiplier is left off this score.</li>
+        </ol>
+
+        <h3>Pareto frontier</h3>
+        <p>The numbers for this test are under Results, on Pareto.</p>
+        <p><strong>Setup.</strong> Twenty-one mornings, on the held-out people. Everyone starts at tiredness 0, and each rule carries its own tiredness. A point's height is the average extra buys, and its horizontal position is the average extra stops, both versus always staying silent. Two charts hold the channel cap, at 15% and at 30%, and draw closed-loop at four opt-out caps: 0.5%, 1%, 2.5%, and 5%. A menu on the charts turns the weekly limit off. With the limit on, a person can receive at most 3 notes in 7 days.</p>
+        <p><strong>Benchmarks.</strong> Five rules. Closed-loop uplift is four points and each other rule is one point.</p>
+        <ol>
+          <li><strong>Random.</strong> A message drawn at random among email, push, and audio, then trimmed to the channel caps. Anyone left over stays silent.</li>
+          <li><strong>Static heuristic.</strong> A fixed rule with no trees. A push when the last buy was three months ago or longer, and email otherwise, again inside the channel caps.</li>
+          <li><strong>Greedy predictive.</strong> Rank by the raw buy chance, with no subtraction of silence, and message the top of the list inside the caps.</li>
+          <li><strong>Unconstrained uplift.</strong> Give each person the message with the largest extra buy. Both charges stay at 0, so the opt-out extra is ignored. A person whose largest extra buy is zero or negative stays silent. On this chart the channel cap still limits how many people receive each channel.</li>
+          <li><strong>Closed-loop uplift.</strong> The score and the charge passes, at that point's opt-out cap.</li>
+        </ol>
+
+        <h3>Segment note mixes</h3>
+        <p>The numbers for this test are under Results, on Segments.</p>
+        <p><strong>Setup.</strong> Every held-out person, grouped by segment and split at tiredness 1.5. One morning. A segment is Sure Thing, Persuadable, Lost Cause, or Sleeping Dog. The assignment is written in Problem Formulation, under Notation, from past spend, months since the last purchase, and whether the person is new. The prepared cases use the same four cap pairs as the other charts. Each row is the percentage sent to silence, email, push, and audio.</p>
+        <p><strong>Benchmark.</strong> One table, and one segment at a time. The segment menu and the channel-cap menu sit under the scenario heading. Tiredness names the band and that band's share of the test population.</p>
+        <p><strong>Unconstrained uplift.</strong> Extra buy, with the opt-out charge at 0. With the cap off, each person receives the largest extra buy, and silence wins when every extra buy is zero or negative. That is the same rule with the channel limit removed. With the cap on, people are ordered by that extra buy and each channel fills to the cap. A full channel hands out the next-best message.</p>
+        <p><strong>Charged and greedy.</strong> The charged column subtracts the opt-out charge. Greedy predictive uses the raw buy chance. Both appear in each band. Note match is the share who receive the same message, once against unconstrained uplift and once against greedy predictive.</p>
+
+        <h3>Qini curves</h3>
+        <p>The numbers for this test are under Results, on Qinis.</p>
+        <p><strong>Setup.</strong> About 64,000 shoppers. 48,000 fit the predictors. 8,000 choose the settings and then join that fit. The curve reads the last 8,000. For each person, keep the email, push, or audio with the largest extra buy. Silence is not a candidate. The ranking uses that extra buy alone. The solid line walks down the list and adds a credit from the message and the coin already stored on the row. A match and a buy counts as +4, and a buy under silence counts as −4, because each message was stored for about one person in four. The comparison line is the straight path to the same final height. The height divides by everyone on the list, including people not yet reached, so the two lines meet at the end. The opt-out cap and the channel cap do not enter this ranking, so the four prepared cases share this curve.</p>
+        <p><strong>Benchmark.</strong> The sorted list against that straight path. The stored message is silence, email, push, or audio, drawn at random, and the coin is the buy drawn from our formula.</p>
+      </div>
+    </section>
+
+    <section id="panel-results" class="hidden">
+      <p id="status" class="mb-3 text-xs text-[#c4b0cc]"></p>
+      <div class="flex items-start gap-4">
+      <nav id="result-tabs" class="page-bar" role="tablist" aria-label="Results">
+        <button id="result-tab-predictors" type="button" class="tab-on" role="tab" aria-selected="true">Predictors</button>
+        <button id="result-tab-qinis" type="button" role="tab" aria-selected="false">Qinis</button>
+        <button id="result-tab-pareto" type="button" role="tab" aria-selected="false">Pareto</button>
+        <button id="result-tab-shadow" type="button" role="tab" aria-selected="false">Shadow price</button>
+        <button id="result-tab-distill" type="button" role="tab" aria-selected="false">Distillation</button>
+        <button id="result-tab-labels" type="button" role="tab" aria-selected="false">Segments</button>
+        <button id="result-tab-custom" type="button" role="tab" aria-selected="false">Simulate custom</button>
+      </nav>
+      <div class="min-w-0 flex-1">
+      <div id="result-predictors">
+        <article class="card rounded-2xl p-4">
+          <h2 class="text-base font-semibold">Predictors</h2>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">The rows.</span> The shopping cards cover about 64,000 people. The split is 56,000 rows to teach the predictor and 8,000 held out. The cards have no tiredness, no push, and no clip inside the app. We keep the card and append two draws. One draw is a tiredness. The other is a message, chosen at random from silence, email, push, and audio. A formula we wrote then gives a buy chance, and a second formula gives a stop chance. A coin flip turns each chance into a yes or a no. The predictor sees the card, the tiredness, the message, and those two answers. It does not see the chance itself. There is one fit for each message and each answer, so eight fits, plus one more fit for the raw buy chance. The prepared charts use histogram gradient-boosted trees: a sequence of small decision trees, each one correcting the misses left by the trees before it. The table below also scores a support-vector machine and a neural net on the same rows.</p>
+          <h3 class="mt-6 text-base font-semibold text-[#b388ff]">Settings</h3>
+          <table class="mix-table predictor-table mt-3">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>What it learns</th>
+                <th>Settings</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Gradient-boosted trees</td>
+                <td>One fit for each message and each answer, a buy and a stop. These are the histogram gradient-boosted trees on the prepared charts.</td>
+                <td>40 trees, at most 3 questions deep, at least 50 people in a leaf, learning rate 0.08, squared error.</td>
+              </tr>
+              <tr>
+                <td>SVM</td>
+                <td>The same fits as the gradient-boosted trees. The columns are scaled first.</td>
+                <td>An RBF map with 64 components and gamma 0.05, then a linear support-vector regressor. C is 1. The loss is squared epsilon-insensitive.</td>
+              </tr>
+              <tr>
+                <td>Neural net</td>
+                <td>The same fits as the gradient-boosted trees. The columns are scaled first.</td>
+                <td>One hidden layer of 64 units, ReLU, penalty 0.0001, learning rate 0.01, 25 passes, batches of 256.</td>
+              </tr>
+              <tr>
+                <td>Message average</td>
+                <td>One chance for each stored message: the share of training rows with that message whose answer was yes. The shopping card is not used.</td>
+                <td>The same chance for every person who received that message. The held-out rows use the shares from the training rows.</td>
+              </tr>
+              <tr>
+                <td>Formula chance</td>
+                <td>Nothing. It is the chance our formulas used to draw the answer.</td>
+                <td>No settings.</td>
+              </tr>
+              <tr>
+                <td>Student</td>
+                <td>Copies the message the gradient-boosted trees assign. It does not learn the buy or the stop. The copy is itself a smaller set of gradient-boosted trees.</td>
+                <td>40 trees, depth 6, learning rate 0.08, at least 20 people in a leaf. The teacher is the gradient-boosted rule at a 1.5% opt-out cap and a 30% channel cap.</td>
+              </tr>
+            </tbody>
+          </table>
+          <h3 class="mt-6 text-base font-semibold text-[#b388ff]">Recall, Precision &amp; Accuracy</h3>
+          <div id="predictor-panel-rate">
+            <p class="mt-4 text-sm leading-6 text-[#c4b0cc]">Each method names a chance for the message stored on the row. A chance at or above the cut-off is called a yes. The three cut-offs are 20%, 35%, and 50%. A lower cut-off keeps more of the people who bought or stopped, and it also calls more of the others a yes. Recall is the share of the real buyers, or stoppers, that the cut-off kept. Precision is the share of the yes calls that were right. Accuracy is the share of all people labeled correctly. A dash means the method called nobody a yes, so precision has no calls to judge. Train is the 56,000 rows the fit saw. Test is the 8,000 held out.</p>
+          </div>
+          <div id="predictor-panel-extra" class="hidden">
+            <p class="mt-4 text-sm leading-6 text-[#c4b0cc]">Each method names a buy chance and a stop chance for silence, email, push, and audio. The extra is the chance for a note minus the chance for silence. The row uses the note with the largest extra. A person is messaged when that extra is at or above the cut-off. The three cut-offs are 0, 10 points, and 20 points. Recall is the share of people whose real extra clears the cut-off and whom we still message. Precision is the share of the people we message whose real extra also clears the cut-off. Accuracy is the share of all people sorted correctly. Real extra is the average true extra among the people we message. A dash means the method messaged nobody. Train is the 56,000 rows the fit saw. Test is the 8,000 held out.</p>
+          </div>
+          <nav id="predictor-view-tabs" class="page-bar mt-4" role="tablist" aria-label="Accuracy tables">
+            <button id="predictor-tab-rate" type="button" class="tab-on" role="tab" aria-selected="true">Buy-stop rates</button>
+            <button id="predictor-tab-extra" type="button" role="tab" aria-selected="false">Extra buy-stop rates</button>
+          </nav>
+          <div id="predictor-tables-rate">
+            <div class="mt-4">
+              <p class="text-sm font-semibold text-[#f6eef4]">Buy-rate</p>
+              <table class="mix-table predictor-table mt-3">
+                <thead id="predictor-buy-cut-head"></thead>
+                <tbody id="predictor-buy-cut-body"></tbody>
+              </table>
+            </div>
+            <div class="mt-4">
+              <p class="text-sm font-semibold text-[#f6eef4]">Stop-rate</p>
+              <table class="mix-table predictor-table mt-3">
+                <thead id="predictor-stop-cut-head"></thead>
+                <tbody id="predictor-stop-cut-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="predictor-tables-extra" class="hidden">
+            <div class="mt-4">
+              <p class="text-sm font-semibold text-[#f6eef4]">Extra buy</p>
+              <table class="mix-table predictor-table mt-3">
+                <thead id="predictor-extra-buy-head"></thead>
+                <tbody id="predictor-extra-buy-body"></tbody>
+              </table>
+            </div>
+            <div class="mt-4">
+              <p class="text-sm font-semibold text-[#f6eef4]">Extra stop</p>
+              <table class="mix-table predictor-table mt-3">
+                <thead id="predictor-extra-stop-head"></thead>
+                <tbody id="predictor-extra-stop-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <p id="predictor-status" class="mt-3 text-sm leading-6 text-[#c4b0cc]"></p>
+        </article>
+      </div>
+      <div id="result-pareto" class="hidden">
+        <article class="card rounded-2xl p-4">
+          <h2 class="text-base font-semibold">Pareto frontier</h2>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Purpose of test.</span> Over 21 mornings, with tiredness carried forward, how do the charged rule's average extra buys and extra stops compare with rules that never set an opt-out charge?</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Setup.</span> Everyone starts at tiredness 0. Each rule keeps its own tiredness. Each morning the rule picks one note. One draw between 0 and 1 is compared with the buy chance of the chosen note and with the buy chance of silence, so one person contributes +1, 0, or −1. Extra buy is the average of those gaps. Extra stop is that same gap for stops. The dot is the average of the 21 mornings. On a weekend the stop coin uses the 1.8 shift for every rule. The charged rule also multiplies predicted extra stops by 1.8 before its charge moves, and it starts each later morning from yesterday's charge. The menu turns the weekly limit on or off. On means a person can receive at most 3 notes in 7 days. Off means a note is allowed every morning. The two charts are the 15% and 30% channel caps. Closed-loop is four caps, 0.5%, 1%, 2.5%, and 5%. The other rules are one point, because they do not use the opt-out cap.</p>
+          <div class="mix-toolbar">
+            <label class="mix-menu">Weekly limit
+              <select id="pareto-weekly" class="weekly-pick" aria-label="Weekly limit">
+                <option value="on" selected>On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+          </div>
+          <div id="pareto-legend" class="mt-4"></div>
+          <div id="pareto-horizon-cases" class="space-y-4"></div>
+          <div id="pareto-horizon-open-cases" class="hidden space-y-4"></div>
+        </article>
+      </div>
+      <div id="result-shadow" class="hidden">
+        <article class="card rounded-2xl p-4">
+          <h2 class="text-base font-semibold">Shadow price and weekend shift</h2>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Purpose of test.</span> When tiredness changes from one morning to the next, does starting from yesterday's opt-out charge and moving it again keep extra stops near the cap, compared with keeping Monday's charge for all 21 days?</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Setup.</span> Twenty-one mornings. Weekend shift is 1.8. Both rules carry tiredness. The closed-loop rule also starts each morning from yesterday's opt-out charge and channel charges, then moves them for today's tiredness. On a shaded weekend, predicted extra stops are multiplied by 1.8 before the charge moves. The frozen rule copies Monday's opt-out charge and keeps that number. The horizontal axis is the day. Purple, on the left, is the opt-out charge. Cyan and orange, on the right, are that morning's extra stops from a fresh yes-or-no draw. Red is the cap. The four cases change only the opt-out cap and the channel cap.</p>
+          <p class="mt-2 text-sm leading-6"><span class="font-semibold text-[#8bd450]">Key takeaway.</span> <span class="font-semibold text-[#8bd450]">On a wide channel, a frozen Monday price leaves part of a tight allowance unused. On the tight channel the two prices spend about the same. A frozen zero still overshoots later.</span></p>
+          <div id="shadow-legend" class="mt-4"></div>
+          <div id="shadow-cases" class="space-y-4"></div>
+        </article>
+      </div>
+      <div id="result-distill" class="hidden">
+        <article class="card rounded-2xl p-4">
+          <h2 class="text-base font-semibold">Distillation</h2>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Purpose of test.</span> The student copies the whole morning rule. Can that copy, used on its own to pick the message, stay close to the standard rule over 21 mornings?</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">What the student copies.</span> The gradient-boosted trees learn an extra buy and an extra stop for each message. They do not pick the message. The teacher does. On the training rows the teacher searches for the opt-out charge and the channel charges that meet a 1.5% opt-out cap and a 30% channel cap, then gives each person the winning message. The student reads the shopping card and the tiredness and is trained to name that message.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Setup.</span> The held-out people. Twenty-one mornings. Weekend shift is 1.8. Tiredness starts at 0 and carries forward. The caps are the ones the student copied: 1.5% opt-out and 30% channel. The standard policy scores today's tiredness with the gradient-boosted trees, then starts from yesterday's charges and moves them. The student names a message from the card and today's tiredness. The channel cap and the weekly skip are applied to that name. The student does not search for a new charge. Extra buys and extra stops are the average gap against silence, from a fresh coin each morning. The message columns are the average share of people on that message.</p>
+          <p class="mt-2 text-sm leading-6"><span class="font-semibold text-[#8bd450]">Key takeaway.</span> <span id="distill-line" class="font-semibold text-[#8bd450]"></span></p>
+          <table class="mix-table predictor-table mt-4">
+            <thead>
+              <tr>
+                <th>Rule</th>
+                <th>Extra buys</th>
+                <th>Extra stops</th>
+                <th>Control</th>
+                <th>Email</th>
+                <th>Push</th>
+                <th>In-App Audio</th>
+              </tr>
+            </thead>
+            <tbody id="distill-body"></tbody>
+          </table>
+          <p id="distill-read" class="mt-3 text-sm leading-6 text-[#f6eef4]"></p>
+        </article>
+      </div>
+      <div id="result-qinis" class="hidden space-y-4">
+        <article class="card rounded-2xl p-4">
+          <h2 class="text-base font-semibold">Simulator Qini</h2>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Purpose of test.</span> The gradient-boosted trees give a buy-rate for each message. We sort people by the biggest extra buy. Does that sort put the movable people (those who buy because of the note, and would not buy in silence) first? If so, that ranking is worth using, and a scarce note goes to the front of the list. A shuffle is the comparison.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Setup.</span> Every shopper, about 64,000, gets a random message and a buy coin before the split. The predictors are fit on 56,000 of them. This chart reads the other 8,000. For each person it keeps the email, push, or audio with the biggest extra buy. Silence is not a candidate. Charges are left out. People are sorted by that extra buy. The solid line walks down the list and adds one credit from the message and the coin already stored in the row. The dotted line is the straight path to the same final height. The opt-out cap and the channel cap do not enter this ranking, so the four prepared cases share this curve.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]">The height is the sum of the credits read so far, divided by all 8,000 people, including the people not yet reached. The credit for one person is: stored message matches the chosen note and the coin is a buy, +4; that same match and no buy, 0; stored message is silence and the coin is a buy, −4; stored silence and no buy, 0; stored message is one of the other two notes, 0 whether they bought or not. Each message was stored for about one person in four, which is why a matching coin is multiplied by 4. These credits are added from the front of the list. A stretch of silent buys makes the line drop. The solid line and the dotted line meet at the end because both have then counted every credit.</p>
+          <div id="qini-sim" class="h-72"></div>
+          <p class="mt-3 text-sm leading-6 text-[#f6eef4]"><span class="font-semibold">Observations.</span> <span id="qini-sim-read"></span></p>
+          <p class="mt-2 text-sm leading-6"><span class="font-semibold text-[#8bd450]">Key takeaway.</span> <span id="qini-sim-line" class="font-semibold text-[#8bd450]"></span></p>
+        </article>
+      </div>
+      <div id="result-labels" class="hidden">
+        <article class="card rounded-2xl p-4">
+          <h2 class="text-base font-semibold">Segment note mixes</h2>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Purpose of test.</span> For a whole segment, how often does the charged note match unconstrained uplift, and how often does it match the raw buy chance? Each segment is read with the channel cap off, then with the channel cap on.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Setup.</span> Every held-out person, one morning. People are grouped by segment and split at tiredness 1.5. A segment is Sure Thing, Persuadable, Lost Cause, or Sleeping Dog. The assignment is written in Problem Formulation, under Notation, from past spend, months since the last purchase, and whether the person is new. Each mix cell is the percentage of that group. The segment menu shows one segment at a time. The channel-cap menu shows that segment with the cap off, or with the cap on. Under tiredness, the percentage is that group's share of the test population. λ is the opt-out charge solved for that scenario.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Unconstrained uplift.</span> A message is scored by its extra buy. The opt-out charge stays at 0. With the channel cap off, each person receives the message with the largest extra buy. Silence wins when every extra buy is zero or negative. That is the same rule with the channel limit removed. With the channel cap on, people are ordered by that best extra buy, and each channel fills until it reaches the cap. A person whose best channel is full receives the next-best message. A person whose best extra buy is zero or negative stays silent. When every channel still has room, the two bands hand out the same notes.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Charged.</span> The score subtracts λ times extra stops from the extra buy. Silence scores 0. With the channel cap off, each person keeps that winning note. With the channel cap on, a charge is added for a full channel, and some people move to their next note or to silence.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Greedy predictive.</span> The raw buy chance is used as it stands. With the channel cap off, each person receives the message with the highest raw chance. With the channel cap on, the highest raw chances fill each channel, and a person whose channel is full receives the next message that still has room. Anyone left without a channel stays silent.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Note match.</span> This is the share of the group who receive the same message. One percentage compares the charged note with unconstrained uplift. The other compares the charged note with greedy predictive.</p>
+          <button id="segment-takeaways" type="button" class="mt-4 rounded-full border border-[#8bd450] bg-[#8bd450] px-4 py-2 text-sm font-semibold text-black">Key takeaways</button>
+          <nav id="segment-scenarios" class="page-bar mt-4" role="tablist" aria-label="Segment scenarios"></nav>
+          <div id="label-cases" class="mt-4"></div>
+        </article>
+      </div>
+      <div id="result-custom" class="hidden">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start">
+          <aside class="card w-full shrink-0 rounded-2xl p-4 lg:w-56">
+            <div class="grid gap-4">
+              <label class="block text-sm">
+                <span class="text-[#c4b0cc]">Predictor</span>
+                <select id="predictor" class="mt-2 w-full rounded-lg border border-[#3d5234] bg-[#10140f] px-2 py-2 text-sm text-[#f6eef4]">
+                  <option value="tree">Gradient-boosted trees</option>
+                  <option value="svm">SVM</option>
+                  <option value="mlp">MLP</option>
+                  <option value="student">Distilled student</option>
+                </select>
+                <span id="predictor-note" class="mt-2 block text-xs leading-5 text-[#c4b0cc]">Gradient-boosted trees are the same predictors as the prepared charts.</span>
+              </label>
+              <label class="block text-sm">
+                <span class="text-[#c4b0cc]">Max incremental opt-out</span>
+                <input id="opt" type="range" min="0.5" max="6" step="0.1" value="1.5" class="mt-2 w-full" />
+                <span id="opt-val" class="mt-1 block font-mono text-xs text-[#e7a8cc]">1.5%</span>
+              </label>
+              <label class="block text-sm">
+                <span class="text-[#c4b0cc]">Channel cap</span>
+                <input id="cap" type="range" min="10" max="45" step="1" value="30" class="mt-2 w-full" />
+                <span id="cap-val" class="mt-1 block font-mono text-xs text-[#e7a8cc]">30%</span>
+              </label>
+              <label class="block text-sm">
+                <span class="text-[#c4b0cc]">Weekend traffic shift</span>
+                <input id="shift" type="range" min="1" max="3" step="0.1" value="1.8" class="mt-2 w-full" />
+                <span id="shift-val" class="mt-1 block font-mono text-xs text-[#e7a8cc]">1.8×</span>
+              </label>
+              <label class="block text-sm">
+                <span class="text-[#c4b0cc]">Horizon (days)</span>
+                <input id="days" type="range" min="7" max="28" step="1" value="21" class="mt-2 w-full" />
+                <span id="days-val" class="mt-1 block font-mono text-xs text-[#e7a8cc]">21</span>
+              </label>
+            </div>
+            <div class="mt-4 grid gap-2">
+              <button id="run" class="rounded-full bg-[#e7a8cc] px-4 py-2 text-sm font-semibold text-[#1a1020]">Run these settings</button>
+              <span id="custom-status" class="text-xs text-[#c4b0cc]"></span>
+            </div>
+          </aside>
+          <div class="min-w-0 flex-1 space-y-4">
+            <article class="card rounded-2xl p-4">
+              <h2 class="text-base font-semibold">Pareto frontier</h2>
+              <p class="mt-2 text-sm leading-6 text-[#c4b0cc]">This chart is one morning on the stored log, at the channel cap on the slider. It is separate from the 21-day average on the Pareto tab. The height is extra buys and the horizontal position is extra stops, both against always staying silent. A person who was not sent the message the rule wanted is filled in from the trees' chance. When the stored message matches, the coin corrects that chance. A message sent to one person in four is counted four times.</p>
+              <div id="custom-pareto" class="h-80"></div>
+            </article>
+            <article class="card rounded-2xl p-4">
+              <h2 class="text-base font-semibold">Shadow price</h2>
+              <section id="custom-kpis" class="grid gap-3 sm:grid-cols-2"></section>
+              <div id="custom-lambda" class="mt-4 h-80"></div>
+            </article>
+            <article class="card rounded-2xl p-4">
+              <h2 class="text-base font-semibold">Simulator Qini</h2>
+              <p id="custom-qini-note" class="mt-2 hidden text-xs leading-5 text-[#c4b0cc]"></p>
+              <div id="custom-qini-sim" class="h-72"></div>
+            </article>
+            <article class="card rounded-2xl p-4">
+              <h2 class="text-base font-semibold">Segment note mixes</h2>
+              <div class="mix-toolbar">
+                <label class="mix-menu">Segment
+                  <select class="segment-pick" aria-label="Segment"></select>
+                </label>
+                <label class="mix-menu">Channel cap
+                  <select class="cap-pick" aria-label="Channel cap">
+                    <option value="off" selected>Off</option>
+                    <option value="on">On</option>
+                  </select>
+                </label>
+              </div>
+              <div id="custom-labels" data-segment-host></div>
+            </article>
+          </div>
+        </div>
+      </div>
+      </div>
+      </div>
+    </section>
+    <div id="takeaway-overlay" class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-black/75 p-5">
+      <div class="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#3d5234] bg-[#1a2118]" role="dialog" aria-modal="true" aria-labelledby="takeaway-title">
+        <div class="flex items-center justify-between gap-4 border-b border-[#2c3826] px-5 py-4">
+          <h2 id="takeaway-title" class="text-lg font-semibold text-[#8bd450]">Key takeaways</h2>
+          <button id="takeaway-close" type="button" class="rounded-full border border-[#3d5234] px-3 py-1 text-sm">Close</button>
+        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto px-6 py-4 text-sm leading-7 text-[#f6eef4]">
+          <p>A note survives the charge only when its extra buy clears its extra stops. A push fails that test for Persuadable people, so the charged rule replaces it with audio or silence. Audio already clears it for Sure Things, so the charged rule keeps it. Unconstrained uplift and greedy predictive never apply that test, so both stay on the push.</p>
+          <p class="mt-4">Greedy predictive spends a scarce channel on people who would buy anyway. The charged rule spends it on people a note can still move, then picks the cheaper note. At a 1.5% opt-out cap and a 15% channel, greedy predictive holds the slots for rested Sure Things and leaves every tired Persuadable person silent. Unconstrained uplift still reaches 64% of rested Persuadable people with a push. The charged rule reaches them with email, and leaves more of them silent. Sleeping Dogs show the same split with the cap off: greedy predictive emails them, and the charged rule leaves most of them silent.</p>
+          <p class="mt-4">A higher opt-out price quiets the charged note, and a wider channel can raise that price. At a 1.5% cap the price is 0.69 with a 15% channel and 0.71 with a 30% channel. At a 5% cap and a 15% channel the opt-out price falls to 0. Channel prices of 0.04 on email and 0.08 on push hold those channels full, and with the cap off the charged note matches unconstrained uplift. At a 5% cap and a 30% channel the opt-out price is 0.29, and a push still leads rested Persuadable people.</p>
+        </div>
+      </div>
+    </div>
+    <div id="module-overlay" class="fixed inset-0 z-50 hidden flex-col bg-black/75 p-5">
+      <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#3d5234] bg-[#1a2118]" role="dialog" aria-modal="true" aria-labelledby="module-title">
+        <div class="flex items-center justify-between gap-4 border-b border-[#2c3826] px-5 py-4">
+          <h2 id="module-title" class="text-lg font-semibold"></h2>
+          <button id="module-close" type="button" class="rounded-full border border-[#3d5234] px-3 py-1 text-sm">Close</button>
+        </div>
+        <div id="module-body" class="formulation-copy min-h-0 flex-1 overflow-y-auto px-6 py-4 text-sm leading-6 text-[#f6eef4]"></div>
+      </div>
+    </div>
+    <div id="legend-pop" class="fixed z-[60] hidden rounded-2xl border border-[#3d5234] bg-[#1a2118] p-4 text-sm shadow-2xl" role="dialog" aria-modal="false">
+      <div class="flex items-start justify-between gap-3">
+        <h3 id="legend-pop-title" class="text-base font-semibold"></h3>
+        <button id="legend-pop-close" type="button" class="rounded-full border border-[#3d5234] px-2 py-0.5 text-xs">Close</button>
+      </div>
+      <p id="legend-pop-body" class="mt-2 leading-6 text-[#f6eef4]"></p>
+    </div>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const layout = {
+      paper_bgcolor: "#10140f",
+      plot_bgcolor: "#10140f",
+      font: { color: "#f6eef4", size: 12 },
+      margin: { l: 58, r: 64, t: 16, b: 112 },
+      legend: {
+        orientation: "h",
+        y: -0.46,
+        title: {
+          text: "Click the legend to see details",
+          side: "top",
+          font: { size: 11, color: "#e7a8cc" },
+        },
+      },
+      xaxis: { gridcolor: "#2c3826", zerolinecolor: "#2c3826" },
+      yaxis: { gridcolor: "#2c3826", zerolinecolor: "#2c3826" },
+    };
+    const colors = {
+      Control: "#d0d5dd",
+      Email: "#6ea8ff",
+      Push: "#ffb020",
+      "In-App Audio": "#3ecf8e",
+    };
+    const series = {
+      "Closed-loop": "#4cc9f0",
+      "This case": "#4cc9f0",
+      "Random": "#f4d35e",
+      "Random order": "#f4d35e",
+      "Static heuristic": "#8bd450",
+      "Greedy predictive": "#ff9f1c",
+      "Unconstrained uplift": "#b388ff",
+      "lambda": "#b388ff",
+      "Closed-loop opt-out": "#4cc9f0",
+      "Static alpha opt-out": "#ff9f1c",
+      "Opt-out budget": "#ff5d73",
+    };
+    const LEGEND_NOTES = {
+      "Closed-loop": "Each blue point is one opt-out cap, averaged over 21 mornings. Tiredness starts at 0 and carries forward. Monday's charge starts at 0 and is carried to the next morning. The weekly-limit menu chooses whether a person can receive at most 3 notes in 7 days. The line joins the caps from small to large. Hover a point to read its cap.",
+      "Random": "Each morning, people are visited in a random order and offered email, push, or audio at random, while that channel is under its cap. The dot is the average extra buy and extra stop over 21 mornings. This rule keeps its own tiredness. The weekly-limit menu applies here too.",
+      "This case": "The diamond is the closed-loop solve at this card's opt-out cap. The blue curve is the same rule at the eight caps from 0.5% to 6%, at this card's channel cap.",
+      "Static heuristic": "No trees. Each morning, if the last purchase was at least 3 months ago, prefer a push. Otherwise prefer email. The channel cap still applies. The dot is the average over 21 mornings, and this rule keeps its own tiredness. This is separate from the frozen Monday charge on the shadow-price chart.",
+      "Greedy predictive": "Each morning, ranks people by the raw buy chance at today's tiredness, with no subtraction of the silence chance. The highest raw chances are sent a message until each channel cap is full. The dot is the average over 21 mornings, and this rule keeps its own tiredness.",
+      "Unconstrained uplift": "Each morning, gives each person the message with the largest extra buy versus silence at today's tiredness. Both charges are zero, so the opt-out cap is ignored. The channel cap still applies. The dot is the average over 21 mornings, and this rule keeps its own tiredness.",
+      "lambda": "The purple line is the opt-out charge, a price, not a percent. Monday finishes at a price. Tuesday starts from that price. If Tuesday's predicted extra stops are over the cap, the price goes up. If they are under, it goes down, and it never goes below 0. On a shaded weekend the predicted extra stops are multiplied by that chart's traffic shift before the price moves.",
+      "Closed-loop opt-out": "After the notes are chosen, each person gets one draw between 0 and 1. If the draw is under their chance of saying stop, they stop. The same draw is also compared with the chance they would have stopped if we had stayed silent. Extra stops are how many more people stopped because of the note. This cyan line is that percent each morning, for the rule whose price still moves. A new draw every morning, so the line wiggles. It is not the purple price.",
+      "Static alpha opt-out": "The same yes-or-no draw, for the rule that copies Monday's opt-out charge and keeps that one number every later morning. The weekend multiplier is not applied to its prediction. The channel cap still limits how many people can get each note. This orange line is not the green static-heuristic dot on the Pareto chart.",
+      "Opt-out budget": "The flat red line is that chart's allowance for extra stops. The purple price is moved so the predicted extra stops sit on this line. The cyan and orange lines are the yes-or-no draws, so one morning can miss the line.",
+      "T-learner": "The gradient-boosted trees give a buy-rate for each message. Extra buy is that rate minus the silence rate. This line keeps, for each held-out person, the email, push, or audio with the largest extra buy, and sorts people by that number. The charges are not used. A credit is then read from the message and the buy coin already stored in that row: +4 if the stored message is the one just picked and they bought, -4 if they were left silent and still bought, and 0 otherwise. The height is the running sum of those credits, divided by everyone. This is not the 21-day run, and it does not send a new note.",
+      "Random order": "The same people in a random order, drawn dotted. It is the line a ranking has to beat. It is not the random message rule on the Pareto chart.",
+    };
+
+    function legendNote(name) {
+      if (LEGEND_NOTES[name]) return { title: name, body: LEGEND_NOTES[name] };
+      return {
+        title: name,
+        body: "People are ordered by the predicted extra buy, and the curve adds that extra up as more of the list is treated. The charges are not used. This is not the 21-day run.",
+      };
+    }
+
+    function openLegend(name, mouse) {
+      const note = legendNote(name);
+      $("legend-pop-title").textContent = note.title;
+      $("legend-pop-body").textContent = note.body;
+      const pop = $("legend-pop");
+      pop.classList.remove("hidden");
+      const width = 352;
+      const left = Math.min(Math.max(12, (mouse ? mouse.clientX : 80) - 40), window.innerWidth - width - 12);
+      const top = Math.min(Math.max(12, (mouse ? mouse.clientY : 80) + 12), window.innerHeight - 220);
+      pop.style.left = left + "px";
+      pop.style.top = top + "px";
+    }
+
+    function closeLegend() {
+      $("legend-pop").classList.add("hidden");
+    }
+
+    function bindLegend(id) {
+      const node = $(id);
+      if (!node || node.dataset.legendBound) return;
+      node.dataset.legendBound = "1";
+      node.on("plotly_legendclick", (event) => {
+        const trace = event.fullData && event.fullData[event.curveNumber];
+        if (trace) openLegend(trace.name, event.event);
+        return false;
+      });
+    }
+
+    const PREDICTOR_NOTES = {
+      tree: "Gradient-boosted trees are the same predictors as the prepared charts.",
+      svm: "The first SVM run fits once. Later runs reuse those scores, then the charge search is the same.",
+      mlp: "The first MLP run fits once. Later runs reuse those scores, then the charge search is the same.",
+      student: "The student copies the gradient-boosted trees' message at these caps. It does not tune a charge. The Qini curve stays on the gradient-boosted trees.",
+    };
+
+    function currentPredictor() {
+      const node = $("predictor");
+      return node ? node.value : "tree";
+    }
+
+    function controls() {
+      return {
+        opt_out_budget: Number($("opt").value) / 100,
+        channel_budget: Number($("cap").value) / 100,
+        traffic_shift: Number($("shift").value),
+        horizon_days: Number($("days").value),
+        predictor: currentPredictor(),
+      };
+    }
+
+    function syncPredictorNote() {
+      $("predictor-note").textContent = PREDICTOR_NOTES[currentPredictor()];
+    }
+    $("predictor").addEventListener("change", syncPredictorNote);
+
+    function syncLabels() {
+      $("opt-val").textContent = Number($("opt").value).toFixed(1) + "%";
+      $("cap-val").textContent = $("cap").value + "%";
+      $("shift-val").textContent = Number($("shift").value).toFixed(1) + "×";
+      $("days-val").textContent = $("days").value;
+    }
+    ["opt", "cap", "shift", "days"].forEach((id) => $(id).addEventListener("input", syncLabels));
+    syncLabels();
+
+    function pct(value) {
+      return (100 * value).toFixed(2) + "%";
+    }
+
+    function capPct(value) {
+      const shown = Math.round(1000 * value) / 10;
+      return (shown % 1 === 0 ? shown.toFixed(0) : shown.toFixed(1)) + "%";
+    }
+
+    function pp(value) {
+      return (100 * value).toFixed(0) + "%";
+    }
+
+    const ARMS = ["Control", "Email", "Push", "In-App Audio"];
+
+    function legendBar(names) {
+      return `<p class="mb-2 text-xs text-[#e7a8cc]">Click the legend to see details</p><div class="mb-4 flex flex-wrap gap-2">${names.map((name) => `
+        <button type="button" class="legend-key rounded-full border border-[#3d5234] px-3 py-1 text-xs" data-legend="${name}">
+          <span class="mr-1 inline-block h-2 w-2 rounded-full align-middle" style="background:${series[name] || "#f6eef4"}"></span>${name}
+        </button>`).join("")}</div>`;
+    }
+
+    function caseHeading(item) {
+      return `${item.title}: opt-out ${capPct(item.opt_out_budget)}, channel ${capPct(item.channel_budget)}`;
+    }
+
+    function paretoFigureRead(figure) {
+      const loop = figure.series.find((item) => item.name === "Closed-loop").points;
+      const light = loop[0];
+      const dark = loop[loop.length - 1];
+      if (figure.kind === "opt_out") {
+        const others = figure.series.filter((item) => item.name !== "Closed-loop").map((item) => item.points[0]);
+        const otherOptMin = Math.min(...others.map((row) => row.opt_out));
+        const leftCount = loop.filter((point) => point.opt_out < otherOptMin).length;
+        let read = `Channel cap ${capPct(figure.channel_budget)}. The ${capPct(light.budget)} opt-out cap is ${pct(light.opt_out)} extra stops and ${pct(light.inc_conv)} extra buys. The ${capPct(dark.budget)} opt-out cap is ${pct(dark.opt_out)} extra stops and ${pct(dark.inc_conv)} extra buys.`;
+        let line = "Each cap is solved on its own. The line joins them from the small cap to the large one.";
+        for (let i = 1; i < loop.length; i += 1) {
+          if (loop[i].opt_out + 1e-6 < loop[i - 1].opt_out) {
+            read += ` The ${capPct(loop[i].budget)} cap lands at ${pct(loop[i].opt_out)} extra stops, left of the ${capPct(loop[i - 1].budget)} cap at ${pct(loop[i - 1].opt_out)}.`;
+            line = "A larger cap can sit to the left. Each cap is a separate solve, and the line only shows cap order.";
+            break;
+          }
+        }
+        if (leftCount === loop.length) {
+          read += ` The other rules sit to the right, past ${pct(otherOptMin)} extra stops.`;
+          line = "Every opt-out cap on this chart spends fewer extra stops than the other rules.";
+        } else if (leftCount > 0) {
+          read += ` ${leftCount} of the four caps sit left of the other rules, which start at ${pct(otherOptMin)} extra stops.`;
+          line = "Most of these caps spend fewer extra stops than the other rules.";
+        }
+        return { read, line };
+      }
+      const loopStops = loop.map((point) => point.opt_out);
+      const otherStops = figure.series.filter((item) => item.name !== "Closed-loop").flatMap((item) => item.points.map((point) => point.opt_out));
+      const loopMax = Math.max(...loopStops);
+      const otherMax = Math.max(...otherStops);
+      const read = `Opt-out cap ${capPct(figure.opt_out_budget)}. The ${capPct(light.channel_cap)} channel cap puts closed-loop at ${pct(light.opt_out)} extra stops and ${pct(light.inc_conv)} extra buys. The ${capPct(dark.channel_cap)} channel cap puts closed-loop at ${pct(dark.opt_out)} extra stops and ${pct(dark.inc_conv)} extra buys. Closed-loop extra stops run from ${pct(Math.min(...loopStops))} to ${pct(loopMax)}. The other rules run up to ${pct(otherMax)}.`;
+      const line = loopMax < otherMax
+        ? "Closed-loop stays left of the widest other-rule point as the channel cap opens."
+        : "Each marker is one channel cap. Hover it to read which.";
+      return { read, line };
+    }
+
+    function paretoCaseRead(payload, budget, cap) {
+      const mark = payload.marked;
+      const others = payload.policies;
+      const otherOptMin = Math.min(...others.map((row) => row.opt_out));
+      const otherConvMax = Math.max(...others.map((row) => row.inc_conv));
+      let read = `Channel cap ${capPct(cap)}. The blue curve is the eight opt-out caps. The diamond is the ${capPct(budget)} cap: ${pct(mark.opt_out)} extra stops and ${pct(mark.inc_conv)} extra buys.`;
+      let line = "One cap on the same frontier.";
+      if (otherOptMin > mark.opt_out) {
+        read += ` The other four rules sit to the right, past ${pct(otherOptMin)} extra stops.`;
+        line = mark.inc_conv + 1e-6 >= otherConvMax
+          ? "This cap spends fewer extra stops than the other rules, and it buys at least as much."
+          : "This cap spends fewer extra stops than the other rules.";
+      }
+      return { read, line };
+    }
+
+    function shadowRead(payload, budget, cap, shift, horizon) {
+      const summary = payload.summary;
+      const closed = summary.mean_opt_out_closed;
+      const frozen = summary.mean_opt_out_static;
+      let line = "The cap is a line. The charge walks to it.";
+      if (frozen + 0.002 < budget && frozen < closed) line = "A frozen price leaves part of the allowance unused.";
+      else if (frozen > budget + 0.002) line = "A frozen price cannot pull back when the weekend gets expensive.";
+      let read = `${horizon} days, weekend shift ${Number(shift).toFixed(1)}, opt-out cap ${capPct(budget)}, channel cap ${capPct(cap)}. Extra stops average ${pct(closed)} with the moving charge and ${pct(frozen)} with Monday's charge held still. Extra buys average ${pct(summary.mean_inc_conv_closed)} and ${pct(summary.mean_inc_conv_static)}.`;
+      const staticDays = payload.opt_out_static || [];
+      const over = staticDays.filter((value) => value > budget + 0.002);
+      if (over.length && summary.alpha < 1e-6) {
+        const peak = Math.max(...staticDays);
+        read += ` The frozen charge stays at 0. Monday's predicted extra stops are under the cap, so the price never rises, and the frozen rule keeps that 0. A price of 0 does not take a note back. After 3 notes in 7 days a person is skipped, so some mornings fall near zero. When they can be reached again they are more tired, and the stop chance rises with tiredness. ${over.length} frozen mornings go over the cap, and the highest reaches ${pct(peak)}.`;
+      }
+      return { read, line };
+    }
+
+    function qiniRead(curve, kind) {
+      const ahead = qiniBow(curve);
+      const end = curve.uplift[curve.uplift.length - 1];
+      const areaEdge = curve.auuc - end / 2;
+      if (kind === "sim") {
+        return {
+          read: ahead
+            ? "Through the middle of the list the solid curve stays above the dotted shuffle. The two meet once everyone has been counted. The caps do not move this curve."
+            : areaEdge > 0
+              ? "The solid curve crosses the dotted shuffle. Its area is only a little larger, and the two meet once everyone has been counted. The caps do not move this curve."
+              : "The solid curve falls behind the dotted shuffle. The caps do not move this curve.",
+          line: ahead ? "The extra-buy sort puts the movable people first." : "On this made-up table, the extra-buy sort does not pull away from a shuffle.",
+        };
+      }
+      const mid = curve.fraction.findIndex((value) => value >= 0.5);
+      const early = curve.uplift.slice(1, mid).filter((value, index) => value < curve.random[index + 1] - 1e-6).length;
+      const late = curve.uplift.slice(mid, -1).filter((value, index) => value > curve.random[mid + index] + 1e-6).length;
+      const crosses = early > (mid - 1) / 2 && late > (curve.uplift.length - 1 - mid) / 2;
+      return {
+        read: crosses
+          ? "The solid curve stays under the shuffle through the first half, crosses near the middle, and the two meet at the end. The caps do not move this curve."
+          : ahead
+            ? "Through the middle of the list the solid curve stays above the shuffle. The two meet once everyone has been counted. The caps do not move this curve."
+            : "The solid curve does not stay above the shuffle. The caps do not move this curve.",
+        line: crosses || !ahead
+          ? "On this held-out set, the extra-buy sort does not pull away from a shuffle."
+          : "On this held-out set, the extra-buy sort puts the movable people first.",
+      };
+    }
+
+    function mixLine(mix) {
+      const shown = ARMS.map((name) => ({ name, text: pp(mix[name]) }));
+      const top = Math.max(...shown.map((item) => Number(item.text.replace("%", ""))));
+      return shown.map((item) => {
+        const mark = Number(item.text.replace("%", "")) === top ? " mix-top" : "";
+        return `<span class="mix-note${mark}" style="color:${colors[item.name]}">${item.name} ${item.text}</span>`;
+      }).join("<br>");
+    }
+
+    let selectedSegment = "";
+    let selectedCap = "off";
+    let segmentPickBound = false;
+
+    function segmentNames(report) {
+      const names = [];
+      report.rows.forEach((item) => {
+        if (!names.includes(item.type)) names.push(item.type);
+      });
+      return names;
+    }
+
+    function labelTable(report, predictor) {
+      const names = segmentNames(report);
+      const current = names.includes(selectedSegment) ? selectedSegment : names[0];
+      selectedSegment = current || "";
+      const capOn = selectedCap === "on";
+      const band = capOn ? "capped" : "open";
+      const shown = report.rows.filter((item) => item.type === current);
+      const population = report.rows.reduce((sum, item) => sum + item.n, 0);
+      const share = (count) => `${population ? (100 * count / population).toFixed(1) : "0.0"}% of test population`;
+      const body = shown.map((item) => {
+        const block = item[band];
+        return `<tr>
+          <td>${item.tiredness}<span class="tired-share">${share(item.n)}</span></td>
+          <td>${mixLine(block.unconstrained)}</td>
+          <td>${mixLine(block.charged)}</td>
+          <td>${mixLine(block.greedy)}</td>
+          <td><span class="font-mono">${pp(block.match_charged_unconstrained)}</span></td>
+          <td><span class="font-mono">${pp(block.match_charged_greedy)}</span></td>
+        </tr>`;
+      }).join("");
+      const student = predictor === "student"
+        ? `<p class="mt-4 text-xs leading-5 text-[#c4b0cc]">The charged column is the message the student copied. There is no opt-out charge. Unconstrained uplift and greedy predictive still use the gradient-boosted trees.</p>`
+        : "";
+      return `
+        ${student}
+        <table class="mix-table mt-4">
+          <thead><tr>
+            <th>Tiredness</th>
+            <th>Unconstrained uplift</th><th>Charged</th><th>Greedy predictive</th>
+            <th>Note Match (%):<br><span class="match-line">charged vs unconstrained</span></th><th>Note Match (%):<br><span class="match-line">charged vs greedy</span></th>
+          </tr></thead>
+          <tbody>${body}</tbody>
+        </table>`;
+    }
+
+    function fillSegmentMenus(report) {
+      const names = segmentNames(report);
+      const current = names.includes(selectedSegment) ? selectedSegment : (names[0] || "");
+      selectedSegment = current;
+      const options = names.map((name) => `<option value="${name}">${name}</option>`).join("");
+      document.querySelectorAll("select.segment-pick").forEach((select) => {
+        select.innerHTML = options;
+        select.value = current;
+      });
+      document.querySelectorAll("select.cap-pick").forEach((select) => {
+        select.value = selectedCap === "on" ? "on" : "off";
+      });
+    }
+
+    function bindSegmentHost(host, report, predictor) {
+      host._report = report;
+      host._predictor = predictor || "";
+      fillSegmentMenus(report);
+      host.innerHTML = labelTable(report, predictor);
+    }
+
+    function ensureSegmentPick() {
+      if (segmentPickBound) return;
+      segmentPickBound = true;
+      document.addEventListener("change", (event) => {
+        if (event.target.matches("select.cap-pick")) selectedCap = event.target.value;
+        else if (event.target.matches("select.segment-pick")) selectedSegment = event.target.value;
+        else return;
+        document.querySelectorAll("[data-segment-host]").forEach((host) => {
+          if (host._report) bindSegmentHost(host, host._report, host._predictor);
+        });
+      });
+    }
+
+    function kpi(label, value) {
+      return `<article class="card rounded-2xl p-4"><p class="text-xs text-[#c4b0cc]">${label}</p><p class="mt-2 font-mono text-2xl">${value}</p></article>`;
+    }
+
+    function putTake(readId, lineId, read, line) {
+      $(readId).textContent = read;
+      if (lineId) $(lineId).textContent = line;
+    }
+
+    function qiniBow(curve) {
+      const gaps = curve.uplift.map((value, index) => value - curve.random[index]).slice(1, -1);
+      const ahead = gaps.filter((gap) => gap > 1e-6).length;
+      return ahead > gaps.length * 0.6;
+    }
+
+    async function post(url, body) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || response.statusText);
+      }
+      return response.json();
+    }
+
+    function plotParetoFigure(target, figure, sharedLegend) {
+      const traces = figure.series.map((item) => {
+        const color = series[item.name] || "#f6eef4";
+        const capLabel = figure.kind === "opt_out" ? "Opt-out cap" : "Channel cap";
+        return {
+          x: item.points.map((point) => 100 * point.opt_out),
+          y: item.points.map((point) => 100 * point.inc_conv),
+          customdata: item.points.map((point) => figure.kind === "opt_out" ? point.budget : point.channel_cap),
+          hovertemplate: `${capLabel} %{customdata:.1%}<br>Incremental opt-out: %{x:.2f}%<br>Incremental conversion: %{y:.2f}%<extra>${item.name}</extra>`,
+          mode: item.name === "Closed-loop" && figure.kind === "opt_out" ? "lines+markers" : "markers",
+          name: item.name,
+          marker: { size: item.name === "Closed-loop" ? 11 : 10, color },
+          line: item.name === "Closed-loop" ? { color: "#7ec8e3", width: 2 } : undefined,
+        };
+      });
+      Plotly.react(target, traces, {
+        ...layout,
+        showlegend: !sharedLegend,
+        margin: sharedLegend ? { ...layout.margin, b: 52 } : layout.margin,
+        xaxis: { ...layout.xaxis, title: "Incremental opt-out (%)" },
+        yaxis: { ...layout.yaxis, title: "Incremental conversion (%)" },
+      }, { responsive: true, displayModeBar: false });
+      if (!sharedLegend) bindLegend(target);
+    }
+
+    function plotPareto(target, payload, sharedLegend) {
+      const loop = payload.closed_loop;
+      const traces = [
+        {
+          x: loop.map((row) => 100 * row.opt_out),
+          y: loop.map((row) => 100 * row.inc_conv),
+          customdata: loop.map((row) => row.budget),
+          hovertemplate: "Incremental opt-out: %{x:.2f}%<br>Incremental conversion: %{y:.2f}%<br>opt-out budget B<sub>opt-out</sub> = %{customdata:.2%}<extra>Closed-loop</extra>",
+          mode: "lines+markers",
+          name: "Closed-loop",
+          line: { color: series["Closed-loop"] },
+        },
+      ];
+      payload.policies.forEach((row) => {
+        traces.push({
+          x: [100 * row.opt_out],
+          y: [100 * row.inc_conv],
+          mode: "markers",
+          name: row.name,
+          marker: { size: 12, color: series[row.name] },
+        });
+      });
+      if (payload.marked) {
+        traces.push({
+          x: [100 * payload.marked.opt_out],
+          y: [100 * payload.marked.inc_conv],
+          mode: "markers",
+          name: "This case",
+          marker: { size: 16, symbol: "diamond", color: series["Closed-loop"], line: { color: "#f6eef4", width: 1 } },
+          hovertemplate: "This case<br>Incremental opt-out: %{x:.2f}%<br>Incremental conversion: %{y:.2f}%<extra></extra>",
+        });
+      }
+      Plotly.react(target, traces, {
+        ...layout,
+        showlegend: !sharedLegend,
+        margin: sharedLegend ? { ...layout.margin, b: 52 } : layout.margin,
+        xaxis: { ...layout.xaxis, title: "Incremental opt-out (%)" },
+        yaxis: { ...layout.yaxis, title: "Incremental conversion (%)" },
+      }, { responsive: true, displayModeBar: false });
+      if (!sharedLegend) bindLegend(target);
+    }
+
+    function plotQini(target, curve, label, readId, lineId, kind) {
+      Plotly.react(target, [
+        { x: curve.fraction, y: curve.uplift, mode: "lines", name: label, line: { color: series["Closed-loop"] } },
+        { x: curve.fraction, y: curve.random, mode: "lines", name: "Random order", line: { color: series["Random order"], dash: "dot" } },
+      ], {
+        ...layout,
+        xaxis: { ...layout.xaxis, title: "Fraction targeted" },
+        yaxis: { ...layout.yaxis, title: "Cumulative IPS contrast" },
+      }, { responsive: true, displayModeBar: false });
+      bindLegend(target);
+      if (readId) {
+        const take = qiniRead(curve, kind);
+        putTake(readId, lineId, take.read, take.line);
+      }
+    }
+
+    function weekendMarks(days, flags) {
+      const shapes = [];
+      const annotations = [];
+      let start = null;
+      const dayNumber = (index) => days[index] + 1;
+      for (let i = 0; i <= days.length; i++) {
+        const on = i < days.length && flags[i];
+        if (on && start === null) start = i;
+        if (!on && start !== null) {
+          const x0 = dayNumber(start) - 0.5;
+          const x1 = dayNumber(i - 1) + 0.5;
+          shapes.push({
+            type: "rect",
+            xref: "x",
+            yref: "paper",
+            x0,
+            x1,
+            y0: 0,
+            y1: 1,
+            fillcolor: "rgba(231, 168, 204, 0.16)",
+            line: { color: "rgba(231, 168, 204, 0.7)", width: 1 },
+            layer: "below",
+          });
+          annotations.push({
+            x: (x0 + x1) / 2,
+            y: 1.04,
+            xref: "x",
+            yref: "paper",
+            text: "weekend",
+            showarrow: false,
+            font: { size: 11, color: "#e7a8cc" },
+            yanchor: "bottom",
+          });
+          start = null;
+        }
+      }
+      return { shapes, annotations };
+    }
+
+    function plotLambda(target, payload, sharedLegend) {
+      const days = payload.days;
+      const day = days.map((value) => value + 1);
+      const marks = weekendMarks(days, payload.weekend);
+      Plotly.react(target, [
+        { x: day, y: payload.lambda, name: "lambda", line: { color: series.lambda } },
+        { x: day, y: payload.opt_out_closed.map((v) => 100 * v), name: "Closed-loop opt-out", yaxis: "y2", line: { color: series["Closed-loop opt-out"] } },
+        { x: day, y: payload.opt_out_static.map((v) => 100 * v), name: "Static alpha opt-out", yaxis: "y2", line: { color: series["Static alpha opt-out"] } },
+        { x: day, y: day.map(() => 100 * payload.budget), name: "Opt-out budget", yaxis: "y2", line: { color: series["Opt-out budget"], dash: "dot" } },
+      ], {
+        ...layout,
+        showlegend: !sharedLegend,
+        margin: { ...layout.margin, t: 36, b: sharedLegend ? 52 : 120 },
+        legend: { ...layout.legend, y: -0.42 },
+        shapes: marks.shapes,
+        annotations: marks.annotations,
+        xaxis: {
+          ...layout.xaxis,
+          title: { text: "Day", standoff: 6 },
+          tickmode: "linear",
+          dtick: 1,
+          tickfont: { size: 10 },
+          range: [day[0] - 0.5, day[day.length - 1] + 0.5],
+        },
+        yaxis: { ...layout.yaxis, title: "Opt-out charge λ" },
+        yaxis2: { title: { text: "Extra stops (%)", font: { color: "#ff5d73" } }, overlaying: "y", side: "right", gridcolor: "#2c3826", tickfont: { color: "#ff5d73" } },
+      }, { responsive: true, displayModeBar: false });
+      if (!sharedLegend) bindLegend(target);
+    }
+
+    function renderKpis(payload, targetId) {
+      const summary = payload.summary;
+      const mix = Object.entries(payload.channel_mix)
+        .map(([name, share]) => `<span style="color:${colors[name] || "#f6eef4"}">${name} ${pct(share)}</span>`)
+        .join(" · ");
+      const board = $(targetId);
+      board.innerHTML = [
+        kpi("Mean incremental conversion", pct(summary.mean_inc_conv_closed)),
+        kpi("Mean incremental opt-out", pct(summary.mean_opt_out_closed)),
+        kpi("Static-alpha opt-out", pct(summary.mean_opt_out_static)),
+        kpi("Message volume", pct(summary.mean_volume_closed)),
+      ].join("");
+      board.insertAdjacentHTML(
+        "beforeend",
+        `<article class="card rounded-2xl p-4 sm:col-span-2"><p class="text-xs text-[#c4b0cc]">Average channel mix · final lambda ${summary.final_lambda.toFixed(2)} · frozen alpha ${summary.alpha.toFixed(2)}</p><p class="mt-2 text-sm">${mix}</p></article>`
+      );
+    }
+
+    function renderCaseBlock(item, index, chartId, heading, withTakeaway) {
+      const takeId = chartId + "-read-" + index;
+      const lineId = withTakeaway === false ? "" : chartId + "-line-" + index;
+      const line = lineId
+        ? `<p class="mt-2 text-sm leading-6"><span class="font-semibold text-[#8bd450]">Key takeaway.</span> <span id="${lineId}" class="font-semibold text-[#8bd450]"></span></p>`
+        : "";
+      return {
+        html: `
+          <article class="rounded-2xl border border-[#2c3826] p-4">
+            <h3 class="font-semibold">${heading || caseHeading(item)}</h3>
+            <div id="${chartId}-${index}" class="mt-3 h-80"></div>
+            <p class="mt-3 text-sm leading-6 text-[#f6eef4]"><span class="font-semibold">Observations.</span> <span id="${takeId}"></span></p>
+            ${line}
+          </article>`,
+        takeId,
+        lineId,
+      };
+    }
+
+    function renderPrepared(payload) {
+      const paretoNames = ["Closed-loop", "Random", "Static heuristic", "Greedy predictive", "Unconstrained uplift"];
+      $("pareto-legend").innerHTML = legendBar(paretoNames);
+      $("shadow-legend").innerHTML = legendBar(["lambda", "Closed-loop opt-out", "Static alpha opt-out", "Opt-out budget"]);
+      const shadowBits = payload.cases.map((item, index) => renderCaseBlock(item, index, "lambda", "", false));
+      $("shadow-cases").innerHTML = shadowBits.map((bit) => bit.html).join("");
+      $("segment-scenarios").innerHTML = payload.cases.map((item, index) => `
+        <button type="button" role="tab" data-segment="${index}" aria-selected="${index === 0 ? "true" : "false"}" class="${index === 0 ? "tab-on" : ""}">Scenario ${index + 1}</button>`).join("");
+      $("segment-scenarios").querySelectorAll("button").forEach((button) => {
+        button.addEventListener("click", () => showSegment(Number(button.dataset.segment)));
+      });
+      ensureSegmentPick();
+      $("label-cases").innerHTML = payload.cases.map((item, index) => `
+        <article id="segment-case-${index}" class="${index === 0 ? "" : "hidden"} rounded-2xl border border-[#2c3826] p-4">
+          <h3 class="font-semibold">Scenario ${index + 1}: ${caseHeading(item)}</h3>
+          <div class="mix-toolbar">
+            <label class="mix-menu">Segment
+              <select class="segment-pick" aria-label="Segment"></select>
+            </label>
+            <label class="mix-menu">Channel cap
+              <select class="cap-pick" aria-label="Channel cap">
+                <option value="off" selected>Off</option>
+                <option value="on">On</option>
+              </select>
+            </label>
+          </div>
+          <div data-segment-host></div>
+        </article>`).join("");
+      function paintParetoSet(figures, hostId, chartId) {
+        const bits = (figures || []).map((figure, index) => renderCaseBlock(
+          { title: figure.title, opt_out_budget: figure.opt_out_budget, channel_budget: figure.channel_budget },
+          index,
+          chartId,
+          figure.title,
+          true,
+        ));
+        $(hostId).innerHTML = bits.map((bit) => bit.html).join("");
+        (figures || []).forEach((figure, index) => {
+          plotParetoFigure(chartId + "-" + index, figure, true);
+          const take = paretoFigureRead(figure);
+          putTake(bits[index].takeId, bits[index].lineId, take.read, take.line);
+        });
+        return (figures || []).map((_, index) => chartId + "-" + index);
+      }
+      const paretoOn = paintParetoSet(payload.pareto_horizon_figures, "pareto-horizon-cases", "pareto-h");
+      const paretoOff = paintParetoSet(payload.pareto_horizon_open_figures, "pareto-horizon-open-cases", "pareto-o");
+      RESULT_CHARTS.pareto = paretoOn.concat(paretoOff);
+      RESULT_CHARTS.shadow = payload.cases.map((_, index) => "lambda-" + index);
+      $("label-cases").querySelectorAll("[data-segment-host]").forEach((host, index) => {
+        bindSegmentHost(host, payload.cases[index].labels, "");
+      });
+      payload.cases.forEach((item, index) => {
+        plotLambda("lambda-" + index, item.simulate, true);
+        const shadowTake = shadowRead(item.simulate, item.opt_out_budget, item.channel_budget, item.traffic_shift, item.horizon_days);
+        putTake(shadowBits[index].takeId, shadowBits[index].lineId, shadowTake.read, shadowTake.line);
+      });
+      plotQini("qini-sim", payload.qini_sim, "T-learner", "qini-sim-read", "qini-sim-line", "sim");
+      renderDistillation(payload.distillation);
+      seedCustom(payload);
+    }
+
+    function renderDistillation(block) {
+      if (!block) return;
+      const names = ["Control", "Email", "Push", "In-App Audio"];
+      const row = (label, side) => {
+        const mixes = names.map((name) => `<td>${pct(side.channel_mix[name])}</td>`).join("");
+        return `<tr><td>${label}</td><td>${pct(side.mean_inc_conv)}</td><td>${pct(side.mean_opt_out)}</td>${mixes}</tr>`;
+      };
+      $("distill-body").innerHTML = row("Standard policy", block.teacher) + row("Student", block.student);
+      const teacher = block.teacher;
+      const student = block.student;
+      $("distill-read").innerHTML = `<span class="font-semibold">Observations.</span> Over ${block.horizon_days} mornings the standard policy averages ${pct(teacher.mean_inc_conv)} extra buys and ${pct(teacher.mean_opt_out)} extra stops. The student averages ${pct(student.mean_inc_conv)} extra buys and ${pct(student.mean_opt_out)} extra stops.`;
+      $("distill-line").textContent = "The student keeps the extra buys and spends fewer extra stops. It leaves more people silent, and it does not search for a new charge.";
+    }
+
+    function defaultCustomPareto(payload) {
+      const near = (left, right) => Math.abs(left - right) < 1e-6;
+      const sweep = payload.pareto_figures.find((figure) => figure.kind === "opt_out" && near(figure.channel_budget, 0.3));
+      const loop = sweep.series.find((item) => item.name === "Closed-loop").points;
+      const marked = sweep.marked;
+      return {
+        closed_loop: loop,
+        policies: sweep.series.filter((item) => item.name !== "Closed-loop").map((item) => item.points[0]),
+        marked,
+        qini_sim: payload.qini_sim,
+        qini_hillstrom: payload.qini_hillstrom,
+      };
+    }
+
+    function qiniLabel(kind) {
+      if (kind === "svm") return "SVM";
+      if (kind === "mlp") return "MLP";
+      return "T-learner";
+    }
+
+    function paintCustom(sim, frontier, labels, kind) {
+      const shown = kind || "tree";
+      renderKpis(sim, "custom-kpis");
+      plotLambda("custom-lambda", sim, false);
+      plotPareto("custom-pareto", frontier, false);
+      $("custom-qini-note").textContent = shown === "student"
+        ? "The student has no buy scores of its own. This curve stays on the gradient-boosted trees."
+        : "";
+      $("custom-qini-note").classList.toggle("hidden", shown !== "student");
+      plotQini("custom-qini-sim", frontier.qini_sim, qiniLabel(shown));
+      ensureSegmentPick();
+      bindSegmentHost($("custom-labels"), labels, shown);
+    }
+
+    function seedCustom(payload) {
+      const near = (left, right) => Math.abs(left - right) < 1e-6;
+      const item = payload.cases.find((row) => near(row.opt_out_budget, 0.015) && near(row.channel_budget, 0.3));
+      paintCustom(item.simulate, defaultCustomPareto(payload), item.labels, "tree");
+    }
+
+    async function loadCases() {
+      $("status").textContent = "Preparing the four cases…";
+      const payload = await fetch("/api/cases").then((response) => {
+        if (!response.ok) throw new Error("Could not prepare the cases");
+        return response.json();
+      });
+      renderPrepared(payload);
+      $("status").textContent = "";
+      if (currentResult) resizeCharts(RESULT_CHARTS[currentResult]);
+    }
+
+    async function runCustom() {
+      const body = controls();
+      $("custom-status").textContent = body.predictor === "student"
+        ? "Fitting the student at these caps, then running…"
+        : body.predictor === "tree"
+          ? "Running…"
+          : "Fitting this predictor once, then running…";
+      const [sim, frontier, labels] = await Promise.all([
+        post("/api/simulate", body),
+        post("/api/pareto", { channel_budget: body.channel_budget, opt_out_budget: body.opt_out_budget, predictor: body.predictor }),
+        post("/api/labels", { opt_out_budget: body.opt_out_budget, channel_budget: body.channel_budget, predictor: body.predictor }),
+      ]);
+      paintCustom(sim, frontier, labels, body.predictor);
+      $("custom-status").textContent = "";
+      resizeCharts(RESULT_CHARTS.custom);
+    }
+
+    const TAB_LABELS = ["Problem", "Assumptions", "Notation", "Predicting Contrasts", "Policy", "Fatigue", "Distillation", "Content Decisioning"];
+    let formulationSections = null;
+
+    const FLOW_COLUMNS = [
+      {
+        title: "Learning the predictors",
+        note: "A predictor answers a what-if: for this person, with this shopping history and this level of fatigue, if we sent this message, how likely is a buy, and how likely is an opt-out? We use all 64,000 shoppers. 48,000 teach the model, 8,000 choose its settings and then join that fit, and 8,000 are held out. The blocks below are that story in order: what the samples are made of, then the histogram gradient-boosted trees that learn from them.",
+        steps: [
+          { id: "card", kicker: "The samples · the conditioning space" },
+          { id: "chances", kicker: "The samples · the yes or no" },
+          { id: "table", kicker: "How we learn · one pass through the samples" },
+          { id: "trees", kicker: "The model · gradient-boosted trees" },
+        ],
+      },
+      {
+        title: "Policy evaluation",
+        note: "This is the 21-day test. The rule that picks the message was written in advance, and nothing in this column is trained. Each morning it asks the finished predictors what each message would do, and sends one note. One draw is compared with that note and with silence. The gaps are the day's extra buys and extra stops. The next morning starts from the new tiredness and from yesterday's charges.",
+        steps: [
+          { id: "rates", kicker: "Ask the predictors" },
+          { id: "policy", kicker: "Apply the rule we wrote" },
+          { id: "record", kicker: "Write down what happened" },
+          { id: "fatigue", kicker: "Carry fatigue into tomorrow" },
+        ],
+      },
+    ];
+
+    const FLOW_MODULES = {
+      card: {
+        title: "The conditioning space",
+        blurb: "Each sample is one person at one moment: the shopping card, a fatigue level, and the one message we tried.",
+        body: `A sample asks the trees about one situation. The situation is three things together: who the person is, how tired they are, and which message was tried. In the formulation those are the context \\(x\\), the fatigue \\(f\\), and the message \\(a\\). The buy and the opt-out, further down, are what happened in that situation. They are not part of the conditioning space.
+
+**The shopping card, \\(x\\).** One row of the shopping-card file is one person. The fields used later are:
+
+- **history**, dollars spent in the past year
+- **recency**, months since the last purchase
+- **mens**, 1 if they bought men's merchandise in the past year, otherwise 0
+- **womens**, 1 if they bought women's merchandise, otherwise 0
+- **newbie**, 1 if the customer is new
+- **zip code**, rural, suburban, or urban
+- **channel**, how they usually shop: phone, web, or both
+
+Fatigue is not in this file. The buy and the opt-out used to fit the trees are drawn later, from formulas we wrote.
+
+**The fatigue, \\(f\\).** For this one sample it is drawn uniformly between 0 and 3. It is not left over from a message sent yesterday. There is no yesterday in this table.
+
+**The message, \\(a\\).** It is drawn uniformly from the four choices: silence, email, push, and audio. Silence is included. Only this one message is tried. The other three are not rolled for this row.
+
+Push is a phone notification that arrives even when the person is not in the app. Email waits in the inbox. Audio plays only inside the app they already opened.
+
+During the 21 mornings the card is left as it was. A simulated buy does not rewrite history or recency. Fatigue on those mornings is a different tally: it starts at 0 and moves with the notes we send.`,
+      },
+      chances: {
+        title: "The buy and the opt-out",
+        blurb: "Formulas we wrote give a buy rate and an opt-out rate. A coin flip turns each rate into a yes or a no. Those coins are what the gradient-boosted trees study.",
+        body: `These chances are settings we wrote. They are not fit from the shopping cards. Each is the chance of a yes, and the chance of a no is one minus that.
+
+**Card score.** Message and fatigue are not in this sum. The five weights were typed in. They were not fit to the file.
+
+\\[
+\\text{score}_x = -3.40 + 0.70\\,\\log(1+\\text{history}) - 0.28\\,\\text{recency} + 0.12\\,\\text{mens} + 0.10\\,\\text{womens}
+\\]
+
+\\(\\log\\) is the natural logarithm. The \\(+1\\) keeps a spend of \\$0 from being undefined. Zip, the usual shopping channel, and newbie are not in this sum.
+
+**Segment.** History, recency, and newbie are compared with the whole file and the person is placed in Sure Thing, Persuadable, Lost Cause, or Sleeping Dog. The segment and the message pick one lift from a table we typed. Silence has lift 0. For a Persuadable person the push lift is 3.54, the email lift is 2.19, and the audio lift is 1.42. A Sleeping Dog's push lift is -1.67, so that message lowers the score.
+
+**Buy chance.**
+
+\\[
+P(B=1 \\mid x, f, a) = \\sigma\\big(\\text{score}_x + \\mathrm{lift}(\\text{type}, a)\\, e^{-0.65 f}\\big)
+\\qquad
+\\sigma(z) = \\frac{1}{1+e^{-z}}
+\\]
+
+Fatigue 0 leaves the lift whole, because \\(e^{0} = 1\\). A larger fatigue multiplies the lift by a smaller positive number, so the message moves the score less. The sigmoid turns any score into a chance between 0 and 1.
+
+**Opt-out chance.** The card is not an input.
+
+\\[
+P(O=1 \\mid f, a, \\text{shift}) = \\sigma\\big(-4.05 + 0.90 f + 0.40 f^{2} + \\mathrm{cost}(a) + \\log(\\text{shift})\\big)
+\\]
+
+The message costs we typed are 0 for silence, 0.85 for email, 1.75 for push, and 0.28 for audio. The squared fatigue term makes the chance rise slowly and then steeply. The training rows are written with \\(\\text{shift} = 1\\), so the log term is 0. On a later weekend the same formula adds \\(\\log 1.8\\), about 0.59.
+
+**The draw.** The chance, say 0.63, stays hidden. A real app would not store it. The app would store whether the person bought. Pick one uniform number between 0 and 1. If it falls below 0.63, store \\(B = 1\\). If it is 0.63 or higher, store \\(B = 0\\). There is no second cutoff at 0.37. That 0.37 is only the chance the draw lands above 0.63. A second, separate draw does the same for opt-out. These draws are not Gaussian. A person can buy, opt out, do both, or do neither.
+
+The trees are trained on the stored 1s and 0s. They are not trained on a list of chances such as 0.63, 0.57, 0.70. A leaf could average those chances, and the cuts and gaps would still run. We do not hand them over. The trees would then be copying a formula we had already evaluated. Each of these rows is one made-up moment, not 21 days of one person.`,
+      },
+      table: {
+        title: "Teach once, then set people aside",
+        blurb: "All 64,000 people, one sample each. 48,000 fit the predictors. 8,000 choose the settings and then join that fit. The last 8,000 are held out, so the charts can try the rule on people the fit never saw.",
+        body: `The shopping-card file has 64,000 people. Each becomes one row: the card, the random fatigue, the random message, \\(B\\), and \\(O\\).
+
+48,000 rows fit the predictors. 8,000 more choose the settings. Once the settings are chosen, those 8,000 join the fit. The last 8,000 stay untouched. A person appears once, at one fatigue. The table is not \\(64{,}000 \\times 21\\). The 21 mornings are played later, on the untouched 8,000, and those mornings are not added to this table.`,
+      },
+      trees: {
+        title: "Gradient-boosted trees",
+        blurb: "Histogram gradient-boosted trees. For each message, one group learns a buy rate and another learns an opt-out rate. The trees do not choose the message.",
+        body: `These are histogram gradient-boosted trees, and the loss is squared error. They predict a buy rate and an opt-out rate. They do not output a message. Their target is the stored coin, 1 or 0, not the hidden chance 0.63 that produced the coin. A leaf averages those coins. It does not average the hidden chances. A column is chopped into bins, and a question picks an edge between bins. Spend and months stay in their own units.
+
+The rows are separated by the message that was drawn. The push-buy fit sees only push rows, and the same for silence, email, and audio. Opt-out is fit the same way. That is eight fits. The push-buy fit is the example below.
+
+**The starting rate.** Before any tree, every person in the push pile has the same estimated buy rate. It is the buys in that pile divided by the people in that pile. That one number is saved. Inference starts from it again. It is not the average of the rates the forty trees later produce.
+
+**One question.** A question cuts on one field only, a vertical or horizontal line, such as "spend greater than 100." Each side has its own buy rate. Those rates are used only to score the question: the sum of squared misses, \\((B - \\text{rate})^2\\), added over the people in the group. The question we keep is the one with the smallest squared total. A cut that would leave fewer than 50 people on either side is not a candidate. While the tree is growing, the estimated rate is not updated.
+
+**The saved gap.** A path asks at most 3 questions. When the tree is finished, each leaf saves one gap \\(G\\): the average remaining miss of the training people who landed there, actual buy minus the rate they had at the start of this tree. Everyone who lands in that leaf is then moved once,
+
+\\[
+B_{\\text{est}} \\leftarrow B_{\\text{est}} + 0.08 \\times G.
+\\]
+
+On the first tree everyone still shares one rate, so \\(G\\) is the leaf's buy rate minus that shared rate. On later trees a leaf can mix people who arrived with different rates. They all receive 8% of the same saved \\(G\\), not 8% of their own personal miss. The fitted trees divide the misses by the number of people in the leaf plus 1, so a leaf of 50 is divided by 51.
+
+**The next tree.** It starts from those updated rates, holds them still while it chooses its cuts, and then adds 8% of its own gaps. All 40 trees are kept. The 0.08, the 40, the floor of 50, and the limit of 3 questions are the settings with the lowest squared error on the 8,000 validation people. The cuts and the gaps are what the training learns.`,
+      },
+      rates: {
+        title: "What would each message do?",
+        blurb: "Today's card and today's fatigue go into the gradient-boosted trees. They return a buy rate and an opt-out rate for silence, email, push, and audio.",
+        body: `This block runs only after the trees exist, and only for a held-out person. The card is the original snapshot. The fatigue is whatever the tally says this morning. On the first morning that number is 0.
+
+Each person is walked alone. The trees are already built, and the gaps saved in the leaves stay fixed. The walk starts from the training pile's average buy rate, the same number every push row started from before tree 1. It is not the average of the finished training rates.
+
+If the person reaches leaf \\(M\\) of tree \\(N\\), whose saved gap is \\(G_{NM}\\),
+
+\\[
+B_{\\text{est}} \\leftarrow B_{\\text{est}} + 0.08 \\times G_{NM}.
+\\]
+
+Tree 1 starts from the pile average. Tree 2 starts from the rate tree 1 just wrote. The same walk, through that message's own 40 trees, is done for silence, email, push, and audio, and again for opt-out. Another person on the same morning does not change this person's rate. The trees are not fit again on these mornings.`,
+      },
+      policy: {
+        title: "The rule that picks",
+        blurb: "Send the message with the largest extra buy over silence, after the opt-out charge and the channel charge. If none clears both charges, stay silent.",
+        body: `The policy does not pick the message with the highest raw buy rate. It uses the extra over silence.
+
+\\[
+\\tau_{\\text{buy}}(a) = \\hat P(B=1 \\mid a) - \\hat P(B=1 \\mid \\text{silence})
+\\]
+\\[
+\\tau_{\\text{out}}(a) = \\hat P(O=1 \\mid a) - \\hat P(O=1 \\mid \\text{silence})
+\\]
+\\[
+\\text{score}(a) = \\tau_{\\text{buy}}(a) - \\lambda\\, \\tau_{\\text{out}}(a) - \\mu_a
+\\]
+
+Silence has both extras equal to 0, so its score is 0. A message is sent only when its extra buys still win after the charges.
+
+\\(\\lambda\\) is the charge for one unit of extra opt-out. It is raised when the average extra opt-out across the whole group would exceed the cap, for example 1.5%, and lowered when the group is under the cap. The cap is on that average, not on one person. \\(\\mu_a\\) is the charge for a channel that is near its share of the group. Silence is not charged for capacity. These charges are tried 80 times in one morning. Each time, people may switch notes on their own before anyone is forced. On a weekend the predicted extra stops are multiplied by 1.8 before the charge moves. The next morning starts from the charges this morning finished with.
+
+If a channel is still over its allowance, the people on it are sorted by how little they preferred it over their next-best note. The least attached lose it and receive that next-best note. If the extra opt-outs are still over the cap, the people who were sent a note are sorted by score, lowest first, and the weakest notes are turned into silence until the cap holds. A note that would not raise opt-out is not removed by that second sort.
+
+This morning's choice does not add up the next 21 days. Tomorrow feels today's message only because the fatigue tally changes.`,
+      },
+      record: {
+        title: "What we write down",
+        blurb: "One draw is compared with the chosen note and with silence. The gaps are that day's extra buys and extra stops.",
+        body: `After the message is chosen, the buy formula and the opt-out formula are rolled for that message. They are also rolled for a silent copy of the same person, with the same card, the same fatigue, and the same coin flip. The dashboard keeps the gaps:
+
+- extra buy \\(=\\) 1 if the message bought and the silent copy did not, and so on for the other three combinations
+- extra opt-out, in the same way
+
+Averaged over the people, those gaps are the day's gain and the day's loss.
+
+The yes or no is not read the next morning. It does not change the card, and it does not change the fatigue jump. A push that ended in a buy adds the same fatigue as a push that did not.`,
+      },
+      fatigue: {
+        title: "Fatigue tomorrow",
+        blurb: "A message makes the person more tired. A quiet day lets that tiredness fade. Tomorrow the gradient-boosted trees are asked again, at the new tiredness.",
+        body: `Fatigue is the state. It is the number carried into tomorrow. The buy and the opt-out are not.
+
+\\[
+f_{\\text{next}} = 0.85\\, f + \\beta_a + \\varepsilon
+\\]
+
+The old tally is multiplied by 0.85 no matter what we send. \\(\\beta_a\\) is the jump, typed as 0 for silence, 0.40 for email, 0.78 for a push, and 0.20 for audio. \\(\\varepsilon\\) is a tiny wobble, a Gaussian draw with standard deviation 0.02. This wobble is not the buy coin.
+
+Silence is the day with no jump, so the number only falls. A push shrinks the old tally and then adds 0.78. The next morning the trees are asked about this new number. That is the whole link from today to tomorrow.
+
+A weekly count is kept beside the tally. A person who has already been sent 3 messages in the last 7 days can only be left in silence until an older send falls out of the window.`,
+      },
+    };
+
+    function escapeHtml(value) {
+      return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function inlineFormat(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="underline">$1</a>');
+    }
+
+    function renderMarkdown(source) {
+      const blocks = [];
+      const text = source.replace(/\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/g, (_, display, inline) => {
+        const index = blocks.length;
+        blocks.push({ display: display !== undefined, tex: (display || inline).trim() });
+        return `%%MATH${index}%%`;
+      });
+      const lines = text.replace(/\r\n/g, "\n").split("\n");
+      let html = "";
+      let paragraph = [];
+      const flush = () => {
+        if (!paragraph.length) return;
+        html += `<p>${inlineFormat(paragraph.join(" "))}</p>`;
+        paragraph = [];
+      };
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        if (!line.trim() || line.trim() === "---") {
+          flush();
+          i += 1;
+          continue;
+        }
+        if (line.startsWith("### ") || line.startsWith("## ")) {
+          flush();
+          html += `<h3>${inlineFormat(line.replace(/^#{2,3}\s/, ""))}</h3>`;
+          i += 1;
+          continue;
+        }
+        if (line.startsWith("|")) {
+          flush();
+          const rows = [];
+          while (i < lines.length && lines[i].startsWith("|")) {
+            rows.push(lines[i]);
+            i += 1;
+          }
+          const cells = rows
+            .filter((row) => !/^\|[\s:|-]+\|$/.test(row.trim()))
+            .map((row) => row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim()));
+          if (cells.length) {
+            html += "<table><thead><tr>" + cells[0].map((cell) => `<th>${inlineFormat(cell)}</th>`).join("") + "</tr></thead><tbody>";
+            cells.slice(1).forEach((row) => {
+              html += "<tr>" + row.map((cell) => `<td>${inlineFormat(cell)}</td>`).join("") + "</tr>";
+            });
+            html += "</tbody></table>";
+          }
+          continue;
+        }
+        if (line.startsWith("- ")) {
+          flush();
+          html += "<ul>";
+          while (i < lines.length && lines[i].startsWith("- ")) {
+            html += `<li>${inlineFormat(lines[i].slice(2))}</li>`;
+            i += 1;
+          }
+          html += "</ul>";
+          continue;
+        }
+        if (/^\d+\.\s/.test(line)) {
+          flush();
+          html += "<ol>";
+          while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
+            html += `<li>${inlineFormat(lines[i].replace(/^\d+\.\s/, ""))}</li>`;
+            i += 1;
+          }
+          html += "</ol>";
+          continue;
+        }
+        paragraph.push(line.trim());
+        i += 1;
+      }
+      flush();
+      return html.replace(/%%MATH(\d+)%%/g, (_, index) => {
+        const block = blocks[Number(index)];
+        const holder = document.createElement("span");
+        if (window.katex) {
+          window.katex.render(block.tex, holder, { displayMode: block.display, throwOnError: false });
+        } else {
+          holder.textContent = block.tex;
+        }
+        return holder.innerHTML;
+      });
+    }
+
+    function splitFormulation(markdown) {
+      const parts = markdown.split(/^## /m);
+      const intro = parts[0].replace(/^# .+\n+/, "").trim();
+      const sections = [{ label: "Intro", title: "Intro", body: intro }];
+      parts.slice(1).forEach((part, index) => {
+        const breakAt = part.indexOf("\n");
+        const title = part.slice(0, breakAt).trim();
+        sections.push({
+          label: TAB_LABELS[index] || title,
+          title,
+          body: part.slice(breakAt + 1).trim(),
+        });
+      });
+      return sections;
+    }
+
+    function flowColumn(column) {
+      const nodes = column.steps.map((step, index) => {
+        const module = FLOW_MODULES[step.id];
+        const arrow = index === column.steps.length - 1 ? "" : `<div class="flow-arrow" aria-hidden="true"><svg width="18" height="16" viewBox="0 0 18 16" fill="none"><path d="M9 1.5 V9.5" stroke="#e7a8cc" stroke-width="2.6" stroke-linecap="round"/><path d="M3.2 8.2 L9 14.2 L14.8 8.2" stroke="#e7a8cc" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+        return `<button type="button" class="flow-node" data-module="${step.id}"><em class="flow-kicker">${escapeHtml(step.kicker)}</em><strong>${escapeHtml(module.title)}</strong><span>${escapeHtml(module.blurb)}</span></button>${arrow}`;
+      }).join("");
+      return `<section><h3 class="mt-0">${escapeHtml(column.title)}</h3><p class="flow-note">${escapeHtml(column.note)}</p><div>${nodes}</div></section>`;
+    }
+
+    function renderFlow() {
+      $("formulation-body").innerHTML = `
+        <div class="flow-sheet">
+          <h3 class="mt-0">Full flow</h3>
+          <p>Read the left column first. It is how we learn the buy chance and the opt-out chance. Then read the right column. It is the 21-day evaluation of the rule that uses those chances: each morning the rule chooses one message, the world rolls that message and a silent copy, and we record the gap. Click a block for that piece alone.</p>
+          <div class="mt-6 grid gap-10 lg:grid-cols-2">${FLOW_COLUMNS.map(flowColumn).join("")}</div>
+        </div>`;
+    }
+
+    function openModule(id) {
+      const module = FLOW_MODULES[id];
+      if (!module) return;
+      $("module-title").textContent = module.title;
+      $("module-body").innerHTML = renderMarkdown(module.body);
+      $("module-body").scrollTop = 0;
+      $("module-overlay").classList.remove("hidden");
+      $("module-overlay").classList.add("flex");
+    }
+
+    function closeModule() {
+      $("module-overlay").classList.add("hidden");
+      $("module-overlay").classList.remove("flex");
+    }
+
+    function showFormulationTab(index) {
+      const section = formulationSections[index];
+      [...$("formulation-tabs").children].forEach((button, buttonIndex) => {
+        button.classList.toggle("tab-on", buttonIndex === index);
+        button.setAttribute("aria-selected", buttonIndex === index ? "true" : "false");
+      });
+      if (section.flow) renderFlow();
+      else {
+        const heading = section.label === "Intro" ? "" : `<h3>${escapeHtml(section.title)}</h3>`;
+        $("formulation-body").innerHTML = heading + renderMarkdown(section.body);
+        mountSampleRow($("formulation-body"));
+      }
+      $("formulation-body").scrollTop = 0;
+      closeModule();
+    }
+
+    let formulationLoad = null;
+
+    function loadFormulation() {
+      if (!formulationLoad) {
+        formulationLoad = fetchFormulation().catch((error) => {
+          formulationLoad = null;
+          throw error;
+        });
+      }
+      return formulationLoad;
+    }
+
+    function sampleRowFigure() {
+      return `
+        <div class="sample-legend" aria-label="Row colors">
+          <span class="src-file">White: shopping card</span>
+          <span class="src-add">Orange: our random appending</span>
+          <span class="src-draw">Red: drawn values from model-based probabilities</span>
+        </div>
+        <div class="sample-scroll">
+          <table class="sample-row">
+            <thead>
+              <tr>
+                <th class="src-file">Recency</th>
+                <th class="src-file">History</th>
+                <th class="src-file">Mens</th>
+                <th class="src-file">Womens</th>
+                <th class="src-file">Zip</th>
+                <th class="src-file">Newbie</th>
+                <th class="src-file">Channel</th>
+                <th class="src-add">Tiredness</th>
+                <th class="src-add">Message</th>
+                <th class="src-draw">Buy</th>
+                <th class="src-draw">Stop</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="src-file">10</td>
+                <td class="src-file">$115</td>
+                <td class="src-file">0</td>
+                <td class="src-file">1</td>
+                <td class="src-file">Urban</td>
+                <td class="src-file">0</td>
+                <td class="src-file">Web</td>
+                <td class="src-add">1.2</td>
+                <td class="src-add">Push</td>
+                <td class="src-draw">1</td>
+                <td class="src-draw">0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function mountSampleRow(root) {
+      const heading = [...root.querySelectorAll("h3")].find((node) => node.textContent === "What a training row contains");
+      if (!heading) return;
+      let paragraph = heading.nextElementSibling;
+      while (paragraph && paragraph.tagName !== "P") paragraph = paragraph.nextElementSibling;
+      if (paragraph) paragraph.insertAdjacentHTML("afterend", sampleRowFigure());
+    }
+
+    async function fetchFormulation() {
+      $("overview-intro").textContent = "Loading the note…";
+      const response = await fetch("/formulation.md", { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load the formulation note");
+      const sections = splitFormulation(await response.text());
+      $("overview-intro").innerHTML = renderMarkdown(sections[0].body);
+      const trainingRow = [...$("overview-intro").querySelectorAll("p")].find((paragraph) => paragraph.textContent.startsWith("How a training row is built"));
+      if (trainingRow) trainingRow.insertAdjacentHTML("afterend", sampleRowFigure());
+      formulationSections = sections.slice(1);
+      formulationSections.push({ label: "Full flow", title: "Full flow", body: "", flow: true });
+      $("formulation-tabs").innerHTML = formulationSections.map((section) =>
+        `<button type="button" role="tab" aria-selected="false">${section.label}</button>`
+      ).join("");
+      [...$("formulation-tabs").children].forEach((button, index) => {
+        button.addEventListener("click", () => showFormulationTab(index));
+      });
+      showFormulationTab(0);
+    }
+
+    const PAGE_IDS = ["overview", "formulation", "benchmarks", "results"];
+    const RESULT_CHARTS = {
+      predictors: [],
+      pareto: [],
+      shadow: [],
+      distill: [],
+      qinis: ["qini-sim"],
+      labels: [],
+      custom: ["custom-pareto", "custom-lambda", "custom-qini-sim"],
+    };
+    let currentResult = "predictors";
+    let predictorReport = null;
+
+    const PREDICTOR_METHODS = [
+      ["tree", "Gradient-boosted trees"],
+      ["svm", "SVM"],
+      ["mlp", "Neural net"],
+      ["message", "Message average"],
+      ["formula", "Formula chance"],
+    ];
+    function chancePct(value) {
+      return value == null ? "—" : `${(100 * value).toFixed(1)}%`;
+    }
+
+    function cutoffHead(extra) {
+      const metric = (split) => {
+        const real = extra ? `<th>${split} real extra</th>` : "";
+        return `<th>${split} recall</th><th>${split} precision</th><th>${split} accuracy</th>${real}`;
+      };
+      const label = "Cut-off";
+      return `<tr><th>Method</th><th>${label}</th>${metric("Train")}${metric("Test")}</tr>`;
+    }
+
+    function pointsLabel(value) {
+      return value == null ? "—" : `${(100 * value).toFixed(1)} points`;
+    }
+
+    function cutoffRows(source, answer) {
+      return PREDICTOR_METHODS.filter(([key]) => predictorReport[source][key]).map(([key, name]) => {
+        const train = predictorReport[source][key].train[answer].at_cutoff;
+        const test = predictorReport[source][key].test[answer].at_cutoff;
+        return train.map((row, index) => {
+          const held = test[index];
+          const cells = [row.recall, row.precision, row.accuracy, held.recall, held.precision, held.accuracy].map(chancePct);
+          const who = index === 0 ? `<td rowspan="${train.length}">${name}</td>` : "";
+          return `<tr>${who}<td>${chancePct(row.cutoff)}</td>${cells.map((cell) => `<td>${cell}</td>`).join("")}</tr>`;
+        }).join("");
+      }).join("");
+    }
+
+    function extraRows(source, answer) {
+      return PREDICTOR_METHODS.filter(([key]) => predictorReport[source][key] && predictorReport[source][key].uplift).map(([key, name]) => {
+        const train = predictorReport[source][key].uplift.train[answer].at_cutoff;
+        const test = predictorReport[source][key].uplift.test[answer].at_cutoff;
+        return train.map((row, index) => {
+          const held = test[index];
+          const cells = [
+            chancePct(row.recall), chancePct(row.precision), chancePct(row.accuracy), pointsLabel(row.real_extra),
+            chancePct(held.recall), chancePct(held.precision), chancePct(held.accuracy), pointsLabel(held.real_extra),
+          ];
+          const who = index === 0 ? `<td rowspan="${train.length}">${name}</td>` : "";
+          return `<tr>${who}<td>${pointsLabel(row.cutoff)}</td>${cells.map((cell) => `<td>${cell}</td>`).join("")}</tr>`;
+        }).join("");
+      }).join("");
+    }
+
+    function showParetoWeekly(mode) {
+      const open = mode === "off";
+      $("pareto-horizon-cases").classList.toggle("hidden", open);
+      $("pareto-horizon-open-cases").classList.toggle("hidden", !open);
+      resizeCharts(RESULT_CHARTS.pareto);
+    }
+
+    function showPredictorView(id) {
+      ["rate", "extra"].forEach((key) => {
+        const on = key === id;
+        $("predictor-panel-" + key).classList.toggle("hidden", !on);
+        $("predictor-tables-" + key).classList.toggle("hidden", !on);
+        const tab = $("predictor-tab-" + key);
+        tab.classList.toggle("tab-on", on);
+        tab.setAttribute("aria-selected", on ? "true" : "false");
+      });
+    }
+
+    function renderPredictors() {
+      if (!predictorReport) return;
+      const source = "simulator";
+      $("predictor-buy-cut-head").innerHTML = cutoffHead(false);
+      $("predictor-buy-cut-body").innerHTML = cutoffRows(source, "buy");
+      $("predictor-stop-cut-head").innerHTML = cutoffHead(false);
+      $("predictor-stop-cut-body").innerHTML = cutoffRows(source, "stop");
+      $("predictor-extra-buy-head").innerHTML = cutoffHead(true);
+      $("predictor-extra-buy-body").innerHTML = extraRows(source, "buy");
+      $("predictor-extra-stop-head").innerHTML = cutoffHead(true);
+      $("predictor-extra-stop-body").innerHTML = extraRows(source, "stop");
+    }
+
+    async function loadPredictors() {
+      if (predictorReport) {
+        renderPredictors();
+        return;
+      }
+      $("predictor-status").textContent = "Fitting the support-vector machine and the neural net on the training rows…";
+      const response = await fetch("/api/predictors", { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not score the predictors");
+      predictorReport = await response.json();
+      $("predictor-status").textContent = "";
+      renderPredictors();
+    }
+
+    function resizeCharts(ids) {
+      requestAnimationFrame(() => {
+        ids.forEach((id) => {
+          const node = $(id);
+          if (node && node.offsetParent !== null && node.data) Plotly.Plots.resize(node);
+        });
+      });
+    }
+
+    function showPage(id) {
+      PAGE_IDS.forEach((key) => {
+        $("panel-" + key).classList.toggle("hidden", key !== id);
+        const tab = $("page-tab-" + key);
+        tab.classList.toggle("tab-on", key === id);
+        tab.setAttribute("aria-selected", key === id ? "true" : "false");
+      });
+      if (id === "formulation") loadFormulation().catch((error) => { $("status").textContent = error.message; });
+      if (id === "results") resizeCharts(RESULT_CHARTS[currentResult]);
+    }
+
+    function showSegment(index) {
+      document.querySelectorAll("#segment-scenarios button").forEach((button) => {
+        const on = Number(button.dataset.segment) === index;
+        button.classList.toggle("tab-on", on);
+        button.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      document.querySelectorAll("#label-cases article").forEach((article) => {
+        article.classList.toggle("hidden", article.id !== "segment-case-" + index);
+      });
+    }
+
+    function showResult(id) {
+      currentResult = id;
+      Object.keys(RESULT_CHARTS).forEach((key) => {
+        $("result-" + key).classList.toggle("hidden", key !== id);
+        const tab = $("result-tab-" + key);
+        tab.classList.toggle("tab-on", key === id);
+        tab.setAttribute("aria-selected", key === id ? "true" : "false");
+      });
+      resizeCharts(RESULT_CHARTS[id]);
+      if (id === "predictors") loadPredictors().catch((error) => { $("predictor-status").textContent = error.message; });
+    }
+
+    $("legend-pop-close").addEventListener("click", closeLegend);
+    document.addEventListener("click", (event) => {
+      const key = event.target.closest && event.target.closest(".legend-key");
+      if (key) {
+        openLegend(key.dataset.legend, event);
+        return;
+      }
+      const pop = $("legend-pop");
+      if (pop.classList.contains("hidden")) return;
+      if (pop.contains(event.target)) return;
+      if (event.target.closest && event.target.closest(".legend")) return;
+      closeLegend();
+    });
+    $("formulation-body").addEventListener("click", (event) => {
+      const node = event.target.closest("[data-module]");
+      if (node) openModule(node.dataset.module);
+    });
+    function openTakeaways() {
+      $("takeaway-overlay").classList.remove("hidden");
+      $("takeaway-overlay").classList.add("flex");
+    }
+
+    function closeTakeaways() {
+      $("takeaway-overlay").classList.add("hidden");
+      $("takeaway-overlay").classList.remove("flex");
+    }
+
+    $("segment-takeaways").addEventListener("click", openTakeaways);
+    $("takeaway-close").addEventListener("click", closeTakeaways);
+    $("takeaway-overlay").addEventListener("click", (event) => {
+      if (event.target === $("takeaway-overlay")) closeTakeaways();
+    });
+    $("module-close").addEventListener("click", closeModule);
+    $("module-overlay").addEventListener("click", (event) => {
+      if (event.target === $("module-overlay")) closeModule();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (!$("takeaway-overlay").classList.contains("hidden")) closeTakeaways();
+      else if (!$("module-overlay").classList.contains("hidden")) closeModule();
+      else if (!$("legend-pop").classList.contains("hidden")) closeLegend();
+    });
+    PAGE_IDS.forEach((id) => $("page-tab-" + id).addEventListener("click", () => showPage(id)));
+    Object.keys(RESULT_CHARTS).forEach((id) => $("result-tab-" + id).addEventListener("click", () => showResult(id)));
+
+    $("run").addEventListener("click", () => runCustom().catch((error) => { $("custom-status").textContent = error.message; }));
+    ["rate", "extra"].forEach((id) => {
+      $("predictor-tab-" + id).addEventListener("click", () => showPredictorView(id));
+    });
+    $("pareto-weekly").addEventListener("change", () => showParetoWeekly($("pareto-weekly").value));
+
+    Promise.all([loadCases(), loadFormulation(), loadPredictors()]).catch((error) => { $("status").textContent = error.message; });
+  </script>
+</body>
+</html>
