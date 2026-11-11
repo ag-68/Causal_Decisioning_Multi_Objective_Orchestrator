@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import threading
 from pathlib import Path
@@ -46,6 +47,9 @@ from app.optimizer import assign_ranked, eligibility, horizon_pareto, simulate_h
 ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "static" / "index.html"
 FORMULATION = ROOT / "docs" / "mathematical_formulation.md"
+PREPARED_DIR = ROOT / "prepared"
+CASES_FILE = PREPARED_DIR / "cases.json"
+PREDICTORS_FILE = PREPARED_DIR / "predictors.json"
 
 NOTE_SIM = (
     "Pareto, shadow prices, the Qini curve, and the label tables use the "
@@ -75,6 +79,8 @@ NOTE_FALLBACK = (
 app = FastAPI(title="Closed-loop message orchestrator")
 _session = None
 _lock = threading.Lock()
+_stored_cases = None
+_stored_predictors = None
 
 
 class SimRequest(BaseModel):
@@ -743,8 +749,34 @@ def _predictor_report(session: dict) -> dict:
     return {"simulator": simulator}
 
 
+def _default_full_run() -> bool:
+    """The saved files are the full Hillstrom run at seed 0. Tests use a smaller fallback."""
+    return (
+        os.environ.get("ORCH_FALLBACK", "0") != "1"
+        and int(os.environ.get("ORCH_N", "0")) == 0
+        and int(os.environ.get("ORCH_SEED", "0")) == 0
+    )
+
+
+def _stored_json(path: Path, slot: str):
+    global _stored_cases, _stored_predictors
+    if not _default_full_run() or not path.is_file():
+        return None
+    cached = _stored_cases if slot == "cases" else _stored_predictors
+    if cached is None:
+        cached = json.loads(path.read_text(encoding="utf-8"))
+        if slot == "cases":
+            _stored_cases = cached
+        else:
+            _stored_predictors = cached
+    return cached
+
+
 @app.get("/api/predictors")
 def predictors():
+    stored = _stored_json(PREDICTORS_FILE, "predictors")
+    if stored is not None:
+        return stored
     session = get_session()
     cached = session.get("predictor_report")
     if cached is None:
@@ -755,6 +787,9 @@ def predictors():
 
 @app.get("/api/cases")
 def cases():
+    stored = _stored_json(CASES_FILE, "cases")
+    if stored is not None:
+        return stored
     return prepared_cases(get_session())
 
 

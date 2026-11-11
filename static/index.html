@@ -102,6 +102,8 @@
     .motive h2 { font-size: 1.2rem; font-weight: 600; color: #b388ff; }
     .motive p,
     .motive .text-sm { font-size: 1rem; line-height: 1.7; color: #ffffff; }
+    .motive p.approach-head { color: #ff9f1c; text-decoration: underline; text-underline-offset: 0.18em; }
+    .motive .approach-mark { color: #ff9f1c; }
     .scene { background: #10140f; border: 1px solid #2c3826; border-radius: 1rem; padding: 1rem 1.05rem; }
     .phone { display: flex; align-items: center; gap: 0.7rem; border-radius: 0.8rem; background: #1a2118; padding: 0.55rem 0.7rem; }
     .dot { width: 0.7rem; height: 0.7rem; border-radius: 999px; flex: none; }
@@ -152,7 +154,8 @@
     .mix-menu { display: inline-flex; align-items: center; gap: 0.45rem; color: #c4b0cc; font-size: 0.75rem; }
     .segment-pick, .cap-pick, .predictor-pick, .weekly-pick { width: auto; min-width: 8.5rem; border-radius: 0.5rem; border: 1px solid #3d5234; background: #10140f; color: #f6eef4; padding: 0.35rem 0.4rem; font-size: 0.8125rem; }
     .cap-pick, .weekly-pick { min-width: 6.5rem; }
-    .tired-share { display: block; margin-top: 0.25rem; color: #c4b0cc; font-size: 0.75rem; line-height: 1.35; }
+    .repo-link { flex: none; align-self: flex-start; border: 1px solid #e7a8cc; border-radius: 999px; padding: 0.45rem 0.9rem; color: #e7a8cc; font-size: 0.875rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+    .repo-link:hover { background: #314033; color: #ffffff; }
     .mix-note { display: inline-block; line-height: 1.35; }
     .mix-top { background: #314033; border-radius: 0.2rem; padding: 0 0.28rem; }
   </style>
@@ -165,11 +168,15 @@
           <p class="text-xs uppercase tracking-[0.22em] text-[#e7a8cc]">Causal decisioning</p>
           <h1 class="mt-2 text-3xl font-semibold tracking-tight">Closed-loop message orchestrator</h1>
         </div>
+        <a class="repo-link" href="https://github.com/ag-68/Causal_Decisioning_Multi_Objective_Orchestrator" target="_blank" rel="noopener">Get git repo</a>
       </div>
 
       <section class="motive mt-6" aria-label="Why this project">
         <p class="max-w-4xl text-[#f6eef4]">A shop, a music app, or a delivery app can send a note: a buzz on the phone, an email waiting in the inbox, or a short clip inside the app. The note can bring a sale or a visit. The same note can make a person say “stop writing to me.”</p>
         <p class="mt-3 max-w-4xl text-[#f6eef4]"><span class="text-[#ff5d73]">Message Orchestration</span> is about the decision each morning: who should hear something, and who should be left alone. <span class="text-[#ff5d73]">Content decisioning</span> is the same choice for a song or a post: once some other model has scored it, decide whether to distribute it, show it less, hold it for review, or leave it alone.</p>
+        <p class="mt-3 max-w-4xl text-[#f6eef4]">— Greedy rules prioritize messages/people with highest buy-chance. Often they choose a loud message for people who would buy anyway, missing opportunities on persuadable buyers and increasing tiredness (message exposure) of the population. —</p>
+        <p class="approach-head mt-3 max-w-4xl">Our Approach:</p>
+        <p class="mt-3 max-w-4xl"><span class="approach-mark">Optimize</span>, for each person, the note that adds the most <span class="approach-mark">extra sales</span>, while the <span class="approach-mark">extra stops</span> caused by those notes <span class="approach-mark">stay inside the day's limit</span>. Each morning the <span class="approach-mark">charge on extra stops is refined from yesterday's value</span> to match the population's new tiredness.</p>
 
         <div class="mt-5 grid gap-4 lg:grid-cols-3">
           <article class="scene">
@@ -408,7 +415,7 @@
           <h2 class="text-base font-semibold">Shadow price and weekend shift</h2>
           <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Purpose of test.</span> When tiredness changes from one morning to the next, does starting from yesterday's opt-out charge and moving it again keep extra stops near the cap, compared with keeping Monday's charge for all 21 days?</p>
           <p class="mt-2 text-sm leading-6 text-[#c4b0cc]"><span class="font-semibold text-[#f6eef4]">Setup.</span> Saturday and Sunday are busier. More people are around, so the same note is more likely to make someone say stop. The 1.8 is a setting we typed in for that busier day. A week of identical Wednesdays would never ask the charge to react. Tiredness is the other change from one morning to the next. Both rules carry it for 21 mornings.</p>
-          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]">The stop formula adds about 0.59 on a weekend before it turns the score into a chance. That 0.59 is log 1.8. A rested person who gets a push goes from about a 9% chance of saying stop on a Wednesday to about 15% on Saturday. The buy chance is the same every day of the week. The trees were trained on weekday rows, so their predicted extra stops are weekday numbers. The closed-loop rule multiplies those predictions by 1.8 before the charge moves, then starts the next morning from the charge it just finished with. Sunday starts from Saturday's higher charge. On Monday the bump is gone and the charge can come back down. The frozen rule keeps Monday's opt-out charge and plans the day with the weekday predictions. The horizontal axis is the day. Purple, on the left, is the opt-out charge. Cyan and orange, on the right, are that morning's extra stops from a fresh yes-or-no draw, using the weekend stop chance on Saturday and Sunday. Red is the cap. The four cases change only the opt-out cap and the channel cap.</p>
+          <p class="mt-2 text-sm leading-6 text-[#c4b0cc]">The stop formula adds about 0.59 on a weekend before it turns the score into a chance. That 0.59 is log 1.8. A rested person who gets a push goes from about a 9% chance of saying stop on a Wednesday to about 15% on Saturday. The buy chance is the same every day of the week. The trees were trained on weekday rows, so their predicted extra stops are weekday numbers. The closed-loop rule multiplies those predictions by 1.8 before the charge moves, then starts the next morning from the charge it just finished with. Sunday starts from Saturday's higher charge. On Monday the bump is gone and the charge can come back down. The frozen rule keeps Monday's opt-out charge and plans the day with the weekday predictions. The horizontal axis is the day. Cyan and orange, on the left, are that morning's extra stops from a fresh yes-or-no draw, using the weekend stop chance on Saturday and Sunday. Purple, on the right, is the opt-out charge. Red is the cap. The four cases change only the opt-out cap and the channel cap.</p>
           <p class="mt-2 text-sm leading-6"><span class="font-semibold text-[#8bd450]">Key takeaway.</span> <span class="font-semibold text-[#8bd450]">On a wide channel, a frozen Monday price leaves part of a tight allowance unused. On the tight channel the two prices spend about the same. A frozen zero still overshoots later.</span></p>
           <div id="shadow-legend" class="mt-4"></div>
           <div id="shadow-cases" class="space-y-4"></div>
@@ -1065,10 +1072,10 @@
       const day = days.map((value) => value + 1);
       const marks = weekendMarks(days, payload.weekend);
       Plotly.react(target, [
-        { x: day, y: payload.lambda, name: "lambda", line: { color: series.lambda } },
-        { x: day, y: payload.opt_out_closed.map((v) => 100 * v), name: "Closed-loop opt-out", yaxis: "y2", line: { color: series["Closed-loop opt-out"] } },
-        { x: day, y: payload.opt_out_static.map((v) => 100 * v), name: "Static alpha opt-out", yaxis: "y2", line: { color: series["Static alpha opt-out"] } },
-        { x: day, y: day.map(() => 100 * payload.budget), name: "Opt-out budget", yaxis: "y2", line: { color: series["Opt-out budget"], dash: "dot" } },
+        { x: day, y: payload.opt_out_closed.map((v) => 100 * v), name: "Closed-loop opt-out", line: { color: series["Closed-loop opt-out"] } },
+        { x: day, y: payload.opt_out_static.map((v) => 100 * v), name: "Static alpha opt-out", line: { color: series["Static alpha opt-out"] } },
+        { x: day, y: day.map(() => 100 * payload.budget), name: "Opt-out budget", line: { color: series["Opt-out budget"], dash: "dot" } },
+        { x: day, y: payload.lambda, name: "lambda", yaxis: "y2", line: { color: series.lambda } },
       ], {
         ...layout,
         showlegend: !sharedLegend,
@@ -1084,8 +1091,8 @@
           tickfont: { size: 10 },
           range: [day[0] - 0.5, day[day.length - 1] + 0.5],
         },
-        yaxis: { ...layout.yaxis, title: "Opt-out charge λ" },
-        yaxis2: { title: { text: "Extra stops (%)", font: { color: "#ff5d73" } }, overlaying: "y", side: "right", gridcolor: "#2c3826", tickfont: { color: "#ff5d73" } },
+        yaxis: { ...layout.yaxis, title: { text: "Extra stops (%)", font: { color: "#ff5d73" } }, tickfont: { color: "#ff5d73" } },
+        yaxis2: { title: { text: "Opt-out charge λ", font: { color: "#b388ff" } }, overlaying: "y", side: "right", showgrid: false, tickfont: { color: "#b388ff" } },
       }, { responsive: true, displayModeBar: false });
       if (!sharedLegend) bindLegend(target);
     }
@@ -1242,7 +1249,7 @@
     }
 
     async function loadCases() {
-      $("status").textContent = "Preparing the four cases…";
+      $("status").textContent = "Loading the prepared results…";
       const payload = await fetch("/api/cases").then((response) => {
         if (!response.ok) throw new Error("Could not prepare the cases");
         return response.json();
@@ -1797,7 +1804,7 @@ A weekly count is kept beside the tally. A person who has already been sent 3 me
         renderPredictors();
         return;
       }
-      $("predictor-status").textContent = "Fitting the support-vector machine and the neural net on the training rows…";
+      $("predictor-status").textContent = "Loading the predictor scores…";
       const response = await fetch("/api/predictors", { cache: "no-store" });
       if (!response.ok) throw new Error("Could not score the predictors");
       predictorReport = await response.json();
